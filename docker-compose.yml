@@ -1,0 +1,87 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: rentacar_mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: rentacar
+      MYSQL_USER: rentacar
+      MYSQL_PASSWORD: rentacar
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - rentacar_net
+    healthcheck:
+      test:
+        ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: rentacar_phpmyadmin
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    environment:
+      PMA_HOST: mysql
+      PMA_PORT: 3306
+      PMA_USER: rentacar
+      PMA_PASSWORD: rentacar
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - rentacar_net
+
+  backend:
+    build: ./backend
+    container_name: rentacar_backend
+    restart: unless-stopped
+    ports:
+      - "4000:4000"
+    environment:
+      NODE_ENV: development
+      PORT: 4000
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: rentacar
+      DB_USER: rentacar
+      DB_PASSWORD: rentacar
+      JWT_SECRET: rentacar_secret_dev_2025
+      CORS_ORIGIN: http://localhost:5173
+    depends_on:
+      mysql:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    networks:
+      - rentacar_net
+
+  frontend:
+    build: ./frontend
+    container_name: rentacar_frontend
+    restart: unless-stopped
+    ports:
+      - "5173:5173"
+    environment:
+      VITE_API_URL: http://localhost:4000/api
+    depends_on:
+      - backend
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    networks:
+      - rentacar_net
+
+volumes:
+  mysql_data:
+
+networks:
+  rentacar_net:
+    driver: bridge
