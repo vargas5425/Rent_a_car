@@ -1,0 +1,268 @@
+/* =========================================================
+   RentCar - estilos propios (se cargan DESPUÉS de bootstrap.min.css)
+   ========================================================= */
+
+/* ---------- Variables de tema ---------- */
+:root {
+  --rc-bg: #ffffff;
+  --rc-bg-alt: #f4f6fa;
+  --rc-text: #212529;
+  --rc-muted: #6c757d;
+  --rc-card: #ffffff;
+  --rc-border: #dee2e6;
+  --rc-accent: #ffc107;
+  --rc-accent-2: #ff8a00;
+}
+[data-theme="dark"] {
+  --rc-bg: #0f131a;
+  --rc-bg-alt: #151a23;
+  --rc-text: #e8ebf0;
+  --rc-muted: #9aa4b2;
+  --rc-card: #1b212c;
+  --rc-border: #2b3340;
+  color-scheme: dark;
+}
+
+html { scroll-behavior: smooth; }
+section { scroll-margin-top: 70px; }
+
+body {
+  background: var(--rc-bg);
+  color: var(--rc-text);
+  transition: background .35s, color .35s;
+}
+
+/* ---------- Portada ---------- */
+.hero {
+  min-height: 100vh;
+  background:
+    linear-gradient(rgba(0,0,0,.55), rgba(0,0,0,.55)),
+    url("../img/portada.png") center/cover no-repeat;
+  color: #fff;
+  display: flex;
+  align-items: center;
+}
+
+/* ---------- Menú superior llamativo ---------- */
+.rc-navbar {
+  padding: 1rem 0;
+  background: linear-gradient(135deg, #0b0f1a 0%, #1b2440 55%, #3b2a00 100%);
+  border-bottom: 3px solid var(--rc-accent);
+  box-shadow: 0 6px 24px rgba(0,0,0,.35);
+  transition: padding .3s, background .3s, box-shadow .3s;
+}
+.rc-navbar.rc-navbar--scrolled {
+  padding: .45rem 0;
+  background: rgba(11, 15, 26, .92);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+
+.rc-brand {
+  display: flex;
+  align-items: center;
+  gap: .55rem;
+  font-weight: 800;
+  font-size: 1.45rem;
+  letter-spacing: .5px;
+  color: #fff;
+}
+.rc-brand__text em { font-style: normal; color: var(--rc-accent); }
+.rc-brand__icon {
+  display: grid;
+  place-items: center;
+  width: 2.3rem;
+  height: 2.3rem;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--rc-accent), var(--rc-accent-2));
+  color: #1a1a1a;
+  font-size: 1.05rem;
+  box-shadow: 0 0 14px rgba(255, 193, 7, .55);
+  transition: transform .4s;
+}
+.rc-brand:hover .rc-brand__icon { transform: rotate(-12deg) scale(1.1); }
+
+.rc-link {
+  position: relative;
+  color: rgba(255,255,255,.85) !important;
+  font-weight: 500;
+  padding: .5rem 1rem !important;
+  transition: color .25s;
+}
+.rc-link::after {
+  content: "";
+  position: absolute;
+  left: 1rem;
+  right: 1rem;
+  bottom: .15rem;
+  height: 3px;
+  border-radius: 3px;
+  background: linear-gradient(90deg, var(--rc-accent), var(--rc-accent-2));
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform .3s;
+}
+.rc-link:hover,
+.rc-link.active { color: var(--rc-accent) !important; }
+.rc-link:hover::after,
+.rc-link.active::after { transform: scaleX(1); }
+
+/* Interruptor Sleep / Work */
+.rc-theme {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  padding: 3px;
+  border: 1px solid rgba(255,255,255,.3);
+  border-radius: 999px;
+  background: rgba(255,255,255,.1);
+  color: #fff;
+  font-size: .85rem;
+  font-weight: 600;
+  cursor: pointer;
+  isolation: isolate;
+}
+.rc-theme:focus-visible { outline: 3px solid #5b8cff; outline-offset: 2px; }
+.rc-theme__opt {
+  position: relative;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  padding: .35rem .85rem;
+  border-radius: 999px;
+  transition: color .3s;
+}
+.rc-theme__thumb {
+  position: absolute;
+  z-index: 1;
+  top: 3px;
+  bottom: 3px;
+  left: 3px;
+  width: calc(50% - 3px);
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--rc-accent), var(--rc-accent-2));
+  transition: transform .35s cubic-bezier(.3, 1.3, .5, 1);
+}
+/* Work (claro): la pastilla está a la izquierda */
+.rc-theme__opt--work  { color: #1a1a1a; }
+.rc-theme__opt--sleep { color: #fff; }
+/* Sleep (oscuro): la pastilla pasa a la derecha */
+[data-theme="dark"] .rc-theme__thumb { transform: translateX(100%); background: linear-gradient(135deg, #7c8cff, #4b5bd6); }
+[data-theme="dark"] .rc-theme__opt--work  { color: #fff; }
+[data-theme="dark"] .rc-theme__opt--sleep { color: #fff; }
+
+@media (max-width: 991.98px) {
+  .rc-navbar .navbar-collapse { padding: 1rem 0 .5rem; }
+  .rc-link::after { left: 0; right: auto; width: 2.5rem; }
+}
+
+/* ---------- Carrusel "Nuestra flota" ---------- */
+.fleet-carousel { padding: 0 .5rem 3rem; }
+.fleet-card {
+  background: var(--rc-card);
+  color: var(--rc-text);
+  border: 1px solid var(--rc-border);
+  border-radius: 1rem;
+  overflow: hidden;
+}
+.fleet-card__img {
+  width: 100%;
+  height: 100%;
+  min-height: 260px;
+  max-height: 380px;
+  object-fit: cover;
+  display: block;
+}
+.fleet-badge {
+  background: rgba(255, 193, 7, .18);
+  color: #a87400;
+  font-weight: 600;
+  padding: .45rem .8rem;
+  border-radius: 999px;
+}
+[data-theme="dark"] .fleet-badge { color: var(--rc-accent); }
+
+/* Flechas circulares sobre la imagen */
+.fleet-control {
+  top: 50%;
+  bottom: auto;
+  width: 3rem;
+  height: 3rem;
+  margin: 0 .5rem;
+  transform: translateY(-50%);
+  border-radius: 50%;
+  background: rgba(0,0,0,.55);
+  opacity: .9;
+  transition: background .25s, transform .25s;
+}
+.fleet-control:hover { background: var(--rc-accent-2); opacity: 1; }
+/* En celular la imagen queda arriba: las flechas se centran sobre la imagen */
+@media (max-width: 767.98px) {
+  .fleet-control { top: 130px; }
+}
+.fleet-control .carousel-control-prev-icon,
+.fleet-control .carousel-control-next-icon { width: 1.2rem; height: 1.2rem; }
+
+/* Puntos indicadores debajo del carrusel */
+.fleet-indicators {
+  bottom: 0;
+  margin-bottom: 0;
+}
+.fleet-indicators [data-bs-target] {
+  width: 12px;
+  height: 12px;
+  margin: 0 6px;
+  border: 0;
+  border-radius: 50%;
+  background-color: var(--rc-muted);
+  opacity: .5;
+  transition: width .3s, opacity .3s, background-color .3s;
+}
+.fleet-indicators .active {
+  width: 34px;
+  border-radius: 8px;
+  background-color: var(--rc-accent-2);
+  opacity: 1;
+}
+
+/* ---------- Secciones y componentes con modo oscuro ---------- */
+.section-alt { background: var(--rc-bg-alt); transition: background .35s; }
+.text-muted { color: var(--rc-muted) !important; }
+.form-label { color: var(--rc-text); }
+.form-control,
+.form-select {
+  background-color: var(--rc-card);
+  color: var(--rc-text);
+  border-color: var(--rc-border);
+}
+.form-control:focus,
+.form-select:focus {
+  background-color: var(--rc-card);
+  color: var(--rc-text);
+  border-color: var(--rc-accent);
+  box-shadow: 0 0 0 .25rem rgba(255, 193, 7, .25);
+}
+[data-theme="dark"] .btn-dark { background: #2b3340; border-color: #3a4352; }
+[data-theme="dark"] .btn-dark:hover { background: var(--rc-accent); border-color: var(--rc-accent); color: #111; }
+[data-theme="dark"] .alert-success { background: #12301f; color: #b7ebc9; border-color: #1e5a38; }
+
+/* ---------- Total en Bs. ---------- */
+.rc-total {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  border-radius: .75rem;
+  background: var(--rc-bg-alt);
+  border: 1px dashed var(--rc-accent-2);
+}
+.rc-total__label { display: block; font-weight: 600; }
+.rc-total__detalle { display: block; color: var(--rc-muted); }
+.rc-total__monto { font-size: 1.8rem; color: var(--rc-accent-2); white-space: nowrap; }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  * { transition: none !important; }
+}

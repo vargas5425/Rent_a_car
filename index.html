@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>RentCar | Alquiler de autos</title>
+
+  <!-- Aplica el tema guardado antes de pintar la página (evita parpadeo) -->
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem("rentcar-tema");
+        if (!t) t = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+        document.documentElement.setAttribute("data-theme", t);
+      } catch (e) { /* sin almacenamiento: se queda en claro */ }
+    })();
+  </script>
+
+  <!-- Bootstrap 5.0.2 local -->
+  <link rel="stylesheet" href="css/bootstrap.min.css">
+  <!-- Iconos -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <!-- Estilos propios del sitio (menú, carrusel, modo Sleep/Work) -->
+  <link rel="stylesheet" href="css/rentcar.css">
+  <!-- Menú social y botón de subir -->
+  <link rel="stylesheet" href="menu-social/style.css">
+</head>
+
+<body data-bs-spy="scroll" data-bs-target="#menu" data-bs-offset="90">
+
+  <!-- NAVBAR -->
+  <nav class="navbar navbar-expand-lg navbar-dark fixed-top rc-navbar" id="navbar">
+    <div class="container">
+      <a class="navbar-brand rc-brand" href="#inicio">
+        <span class="rc-brand__icon"><i class="fa-solid fa-car-side"></i></span>
+        <span class="rc-brand__text">Rent<em>Car</em></span>
+      </a>
+
+      <button class="navbar-toggler" type="button"
+              data-bs-toggle="collapse" data-bs-target="#menu"
+              aria-controls="menu" aria-expanded="false" aria-label="Abrir menú">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+      <div class="collapse navbar-collapse" id="menu">
+        <ul class="navbar-nav ms-auto align-items-lg-center gap-lg-1">
+          <li class="nav-item"><a class="nav-link rc-link" href="#inicio">Inicio</a></li>
+          <li class="nav-item"><a class="nav-link rc-link" href="#flota">Flota</a></li>
+          <li class="nav-item"><a class="nav-link rc-link" href="#servicios">Servicios</a></li>
+          <li class="nav-item"><a class="nav-link rc-link" href="#reservar">Reservar</a></li>
+          <li class="nav-item"><a class="nav-link rc-link" href="#contacto">Contacto</a></li>
+
+          <!-- Opcion Sleep / Work -->
+          <li class="nav-item ms-lg-3 mt-2 mt-lg-0">
+            <button type="button" id="temaToggle" class="rc-theme" role="switch"
+                    aria-checked="false" aria-label="Cambiar entre modo Work (claro) y Sleep (oscuro)">
+              <span class="rc-theme__opt rc-theme__opt--work"><i class="fa-solid fa-sun"></i> Work</span>
+              <span class="rc-theme__opt rc-theme__opt--sleep"><i class="fa-solid fa-moon"></i> Sleep</span>
+              <span class="rc-theme__thumb" aria-hidden="true"></span>
+            </button>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- PORTADA -->
+  <header id="inicio" class="hero text-center">
+    <div class="container">
+      <h1 class="display-3 fw-bold">Alquila el auto ideal</h1>
+      <p class="lead mb-4">Autos modernos, precios claros y atencion 24/7.</p>
+      <a href="#flota" class="btn btn-warning btn-lg me-2">Ver flota</a>
+      <a href="#reservar" class="btn btn-outline-light btn-lg">Reservar ahora</a>
+    </div>
+  </header>
+
+  <!-- FLOTA (carrusel) -->
+  <section id="flota" class="py-5">
+    <div class="container">
+      <h2 class="text-center fw-bold mb-5">Nuestra flota</h2>
+
+      <div id="carruselFlota" class="carousel slide fleet-carousel"
+           data-bs-ride="carousel" data-bs-interval="5000" data-bs-pause="hover">
+
+        <div class="carousel-inner">
+
+          <!-- Auto 1 -->
+          <div class="carousel-item active">
+            <div class="card fleet-card shadow">
+              <div class="row g-0 align-items-stretch">
+                <div class="col-md-7">
+                  <img src="img/auto1.png" class="fleet-card__img" alt="Sedán económico">
+                </div>
+                <div class="col-md-5 d-flex">
+                  <div class="card-body d-flex flex-column justify-content-center p-4 p-lg-5">
+                    <span class="badge fleet-badge mb-3 align-self-start">Mas economico</span>
+                    <h3 class="card-title fw-bold">Sedan Economico</h3>
+                    <p class="card-text text-muted">5 pasajeros . Automatico . Aire acondicionado</p>
+                    <p class="fw-bold fs-3 text-warning mb-4">Bs.35 <small class="fs-6 text-muted">/ dia</small></p>
+                    <a href="#reservar" class="btn btn-dark btn-reservar" data-auto="Sedán Económico">Reservar</a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Auto 2 -->
+          <div class="carousel-item">
+            <div class="card fleet-card shadow">
+              <div class="row g-0 align-items-stretch">
+                <div class="col-md-7">
+                  <img src="img/auto2.png" class="fleet-card__img" alt="SUV familiar">
+                </div>
+                <div class="col-md-5 d-flex">
+                  <div class="card-body d-flex flex-column justify-content-center p-4 p-lg-5">
+                    <span class="badge fleet-badge mb-3 align-self-start">Ideal para familias</span>
+                    <h3 class="card-title fw-bold">SUV Familiar</h3>
+                    <p class="card-text text-muted">7 pasajeros · 4x4 · Amplio maletero</p>
+                    <p class="fw-bold fs-3 text-warning mb-4">Bs.65 <small class="fs-6 text-muted">/ dia</small></p>
+                    <a href="#reservar" class="btn btn-dark btn-reservar" data-auto="SUV Familiar">Reservar</a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Auto 3 -->
+          <div class="carousel-item">
+            <div class="card fleet-card shadow">
+              <div class="row g-0 align-items-stretch">
+                <div class="col-md-7">
+                  <img src="img/auto3.png" class="fleet-card__img" alt="Camioneta pickup">
+                </div>
+                <div class="col-md-5 d-flex">
+                  <div class="card-body d-flex flex-column justify-content-center p-4 p-lg-5">
+                    <span class="badge fleet-badge mb-3 align-self-start">Para carga pesada</span>
+                    <h3 class="card-title fw-bold">Camioneta Pickup</h3>
+                    <p class="card-text text-muted">5 pasajeros · Diésel · Ideal para carga</p>
+                    <p class="fw-bold fs-3 text-warning mb-4">Bs.80 <small class="fs-6 text-muted">/ día</small></p>
+                    <a href="#reservar" class="btn btn-dark btn-reservar" data-auto="Camioneta Pickup">Reservar</a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Flechas -->
+        <button class="carousel-control-prev fleet-control" type="button"
+                data-bs-target="#carruselFlota" data-bs-slide="prev">
+          <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+          <span class="visually-hidden">Anterior</span>
+        </button>
+        <button class="carousel-control-next fleet-control" type="button"
+                data-bs-target="#carruselFlota" data-bs-slide="next">
+          <span class="carousel-control-next-icon" aria-hidden="true"></span>
+          <span class="visually-hidden">Siguiente</span>
+        </button>
+
+        <!-- Indicadores -->
+        <div class="carousel-indicators fleet-indicators">
+          <button type="button" data-bs-target="#carruselFlota" data-bs-slide-to="0"
+                  class="active" aria-current="true" aria-label="Sedán Económico"></button>
+          <button type="button" data-bs-target="#carruselFlota" data-bs-slide-to="1"
+                  aria-label="SUV Familiar"></button>
+          <button type="button" data-bs-target="#carruselFlota" data-bs-slide-to="2"
+                  aria-label="Camioneta Pickup"></button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SERVICIOS -->
+  <section id="servicios" class="py-5 section-alt">
+    <div class="container">
+      <h2 class="text-center fw-bold mb-5">¿Por qué elegirnos?</h2>
+      <div class="row text-center g-4">
+        <div class="col-md-3"><div class="fs-1">🛡️</div><h5>Seguro incluido</h5><p class="text-muted">Cobertura completa en cada alquiler.</p></div>
+        <div class="col-md-3"><div class="fs-1">⏰</div><h5>Atención 24/7</h5><p class="text-muted">Asistencia en carretera todo el día.</p></div>
+        <div class="col-md-3"><div class="fs-1">💳</div><h5>Sin costos ocultos</h5><p class="text-muted">Precio final claro desde el inicio.</p></div>
+        <div class="col-md-3"><div class="fs-1">📍</div><h5>Entrega a domicilio</h5><p class="text-muted">Te llevamos el auto donde estés.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- RESERVAR -->
+  <section id="reservar" class="py-5">
+    <div class="container" style="max-width: 720px;">
+      <h2 class="text-center fw-bold mb-4">Reserva tu auto</h2>
+
+      <div id="reservaOk" class="alert alert-success d-none" role="alert">
+        ¡Solicitud enviada! Te contactaremos pronto para confirmar tu reserva.
+      </div>
+
+      <form class="row g-3" id="formReserva" novalidate>
+        <div class="col-md-6">
+          <label class="form-label" for="nombre">Nombre completo</label>
+          <input type="text" class="form-control" id="nombre" required>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label" for="telefono">Teléfono</label>
+          <input type="tel" class="form-control" id="telefono" required>
+        </div>
+        <div class="col-md-12">
+          <label class="form-label" for="vehiculo">Vehículo</label>
+          <select class="form-select" id="vehiculo">
+            <option>Sedán Económico</option>
+            <option>SUV Familiar</option>
+            <option>Camioneta Pickup</option>
+          </select>
+        </div>
+        <div class="col-md-12">
+          <label class="form-label" for="tipoAlquiler">Tipo de alquiler</label>
+          <select class="form-select" id="tipoAlquiler">
+            <option value="dia">Por día</option>
+            <option value="hora">Por hora</option>
+          </select>
+        </div>
+
+        <!-- Alquiler POR DiA -->
+        <div class="col-md-6 bloque-dia">
+          <label class="form-label" for="recogida">Fecha de recogida</label>
+          <input type="date" class="form-control" id="recogida" required>
+        </div>
+        <div class="col-md-6 bloque-dia">
+          <label class="form-label" for="devolucion">Fecha de devolución</label>
+          <input type="date" class="form-control" id="devolucion" required>
+          <div class="invalid-feedback">La devolución debe ser igual o posterior a la recogida.</div>
+        </div>
+
+        <!-- Alquiler POR HORA -->
+        <div class="col-md-4 bloque-hora d-none">
+          <label class="form-label" for="fechaHora">Fecha</label>
+          <input type="date" class="form-control" id="fechaHora">
+        </div>
+        <div class="col-md-4 bloque-hora d-none">
+          <label class="form-label" for="horaInicio">Hora de recogida</label>
+          <input type="time" class="form-control" id="horaInicio" value="08:00">
+        </div>
+        <div class="col-md-4 bloque-hora d-none">
+          <label class="form-label" for="cantHoras">Cantidad de horas</label>
+          <input type="number" class="form-control" id="cantHoras" min="1" max="24" step="1" value="3">
+        </div>
+
+        <!-- Monto calculado en bolivianos -->
+        <div class="col-12">
+          <div class="rc-total" aria-live="polite">
+            <div>
+              <span class="rc-total__label">Total estimado</span>
+              <small class="rc-total__detalle" id="detalleMonto"></small>
+            </div>
+            <strong class="rc-total__monto" id="montoTotal">Bs. 0,00</strong>
+          </div>
+        </div>
+
+        <div class="col-12">
+          <button type="submit" class="btn btn-warning w-100 btn-lg">Solicitar reserva</button>
+        </div>
+      </form>
+    </div>
+  </section>
+
+  <!-- FOOTER / CONTACTO -->
+  <footer id="contacto" class="bg-dark text-white py-4">
+    <div class="container text-center">
+      <p class="mb-1 fw-bold">🚗 RentCar</p>
+      <p class="mb-1">📞 +591 000 00000 · ✉️ contacto@rentcar.com</p>
+      <small class="text-secondary">© 2026 RentCar. Todos los derechos reservados.</small>
+    </div>
+  </footer>
+
+  <!-- MENÚ SOCIAL -->
+  <div class="social-menu-container">
+    <nav class="social-clock" id="social" aria-label="Compartir en redes sociales">
+      <button class="social-clock__toggle" id="toggle" type="button"
+              aria-expanded="false" aria-controls="social-list" aria-label="Compartir">
+        <i class="fa-solid fa-share-nodes"></i>
+      </button>
+
+      <ul class="social-clock__list" id="social-list">
+        <li class="social-clock__button" style="--index:0"><a href="https://www.facebook.com/" target="_blank" rel="noopener" aria-label="Facebook" class="fb"><i class="fa-brands fa-facebook-f"></i></a></li>
+        <li class="social-clock__button" style="--index:1"><a href="https://www.twitter.com/" target="_blank" rel="noopener" aria-label="Twitter / X" class="tw"><i class="fa-brands fa-twitter"></i></a></li>
+        <li class="social-clock__button" style="--index:2"><a href="https://www.instagram.com/" target="_blank" rel="noopener" aria-label="Instagram" class="ig"><i class="fa-brands fa-instagram"></i></a></li>
+        <li class="social-clock__button" style="--index:3"><a href="https://www.reddit.com/" target="_blank" rel="noopener" aria-label="Reddit" class="rd"><i class="fa-brands fa-reddit-alien"></i></a></li>
+        <li class="social-clock__button" style="--index:4"><a href="https://web.whatsapp.com/" target="_blank" rel="noopener" aria-label="WhatsApp" class="wa"><i class="fa-brands fa-whatsapp"></i></a></li>
+        <li class="social-clock__button" style="--index:5"><a href="https://github.com/" target="_blank" rel="noopener" aria-label="GitHub" class="gh"><i class="fa-brands fa-github"></i></a></li>
+        <li class="social-clock__button" style="--index:6"><a href="https://www.linkedin.com/" target="_blank" rel="noopener" aria-label="LinkedIn" class="in"><i class="fa-brands fa-linkedin-in"></i></a></li>
+      </ul>
+    </nav>
+  </div>
+
+  <!-- BOTÓN SUBIR AL INICIO (aparece al llegar al final, se oculta al subir) -->
+  <a href="#inicio" id="btnSubir" class="btn btn-warning rounded-circle shadow subir-inicio"
+     aria-label="Volver al inicio" tabindex="-1">
+    <i class="fa-solid fa-arrow-up"></i>
+  </a>
+
+  <!-- Bootstrap JS local -->
+  <script src="js/bootstrap.bundle.min.js"></script>
+  <script src="js/rentcar.js"></script>
+  <script src="menu-social/script.js"></script>
+</body>
+</html>
