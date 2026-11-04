@@ -3,6 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import { sequelize } from './infrastructure/models/index.js';
 import authRoutes from './presentation/routes/authRoutes.js'; 
+import alquilerRoutes from './presentation/routes/alquilerRoutes.js';
 
 dotenv.config();
 
@@ -13,6 +14,9 @@ app.use(cors({ origin: process.env.CORS_ORIGIN || 'http://localhost:5173' }));
 app.use(express.json());
 
 app.use('/api/auth', authRoutes);
+
+// Rutas de alquileres y cargos adicionales
+app.use('/api/alquileres', alquilerRoutes);
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'Rent a Car API funcionando' });
