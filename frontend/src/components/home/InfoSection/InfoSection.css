@@ -1,0 +1,7 @@
+/* Estilos para la sección de información */
+.info-section-container {
+  background-color: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  border-left: 4px solid #fbbf24; /* Línea amarilla */
+}

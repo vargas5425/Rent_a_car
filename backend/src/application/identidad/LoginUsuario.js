@@ -22,7 +22,7 @@ export async function loginUsuario({ email, password }) {
 
   // 4. Generar el Token JWT
   const token = jwt.sign(
-    { id: usuario.id, rol: usuario.rol },
+    { id: usuario.id, rol: usuario.rol }, 
     process.env.JWT_SECRET || 'rentacar_secret_dev_2025',
     { expiresIn: '24h' }
   );
