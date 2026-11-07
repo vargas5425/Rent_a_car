@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import { sequelize } from './infrastructure/models/index.js';
 import authRoutes from './presentation/routes/authRoutes.js'; 
 import alquilerRoutes from './presentation/routes/alquilerRoutes.js';
+import vehiculoRoutes from './presentation/routes/vehiculoRoutes.js';
 
 dotenv.config();
 
@@ -14,6 +15,7 @@ app.use(cors({ origin: process.env.CORS_ORIGIN || 'http://localhost:5173' }));
 app.use(express.json());
 
 app.use('/api/auth', authRoutes);
+app.use('/api/vehiculos', vehiculoRoutes);
 
 // Rutas de alquileres y cargos adicionales
 app.use('/api/alquileres', alquilerRoutes);
