@@ -1,13 +1,16 @@
 import { describe, it, expect } from 'vitest';
-import { calcularPrecio, calcularCargoRetraso, calcularCargoCombustible } from './TarifaService.js';
+// CAMBIO 1: Importamos el nuevo nombre de la función
+import { calcularPrecioMatematico, calcularCargoRetraso, calcularCargoCombustible } from './TarifaService.js';
 
 describe('Cálculo de Tarifas', () => {
   it('Debe cobrar 4 horas exactas', () => {
-    expect(calcularPrecio(4, 'HORA', 40)).toBe(160);
+    // CAMBIO 2: Usamos el nuevo nombre de la función
+    expect(calcularPrecioMatematico(4, 'HORA', 40)).toBe(160);
   });
 
   it('Debe redondear 4.5 horas a 5 horas', () => {
-    expect(calcularPrecio(4.5, 'HORA', 40)).toBe(200);
+    // CAMBIO 3: Usamos el nuevo nombre de la función
+    expect(calcularPrecioMatematico(4.5, 'HORA', 40)).toBe(200);
   });
 });
 
