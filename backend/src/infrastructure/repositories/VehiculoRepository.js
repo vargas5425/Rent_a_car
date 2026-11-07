@@ -9,21 +9,32 @@ class VehiculoRepository {
     });
   }
 
-  async findById(id) {
+  
+  // Buscar vehículo por ID con soporte para transacciones
+  async findById(id, options = {}) {
     return await VehiculoModel.findByPk(id, {
+      ...options,
       include: [{ model: CategoriaModel, as: 'categoria' }]
     });
   }
+
 
   async create(data) {
     return await VehiculoModel.create(data);
   }
 
-  async update(id, data) {
-    const vehiculo = await VehiculoModel.findByPk(id);
-    if (!vehiculo) return null;
-    return await vehiculo.update(data);
+  
+  // Actualizar vehículo con soporte para transacciones
+  async update(id, data, options = {}) {
+    const vehiculo = await VehiculoModel.findByPk(id, options);
+
+    if (!vehiculo) {
+      return null;
+    }
+
+    return await vehiculo.update(data, options);
   }
+
 
   async delete(id) {
     const vehiculo = await VehiculoModel.findByPk(id);

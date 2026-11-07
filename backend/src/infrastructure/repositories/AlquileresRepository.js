@@ -94,6 +94,19 @@ class AlquileresRepository {
     return this.actualizar(id, { estado }, options);
   }
 
+  
+  // Registrar la entrega de un vehículo
+  async registrarEntrega(id, datos, options = {}) {
+    const campos = {
+      fecha_entrega: datos.fecha_entrega,
+      kilometraje_inicial: datos.kilometraje_inicial,
+      combustible_inicial: datos.combustible_inicial,
+      estado: 'ACTIVO'
+    };
+
+    return this.actualizar(id, campos, options);
+  }
+
   // 9. Registrar datos de devolución
   async registrarDevolucion(id, datos, options = {}) {
     const campos = {

@@ -7,7 +7,7 @@ import DashboardPage from './pages/admin/DashboardPage';
 import CrearVehiculoPage from './pages/admin/CrearVehiculoPage';
 import ProtectedRoute from './components/layout/ProtectedRoute'; 
 import AdminVehiculosPage from './pages/admin/AdminVehiculosPage';
-
+import AlquileresActivosPage from './pages/employee/AlquileresActivosPage.jsx';
 function App() {
   return (
     <Routes>
@@ -50,6 +50,17 @@ function App() {
           <AdminVehiculosPage />
         </ProtectedRoute>
       } />
+      
+{/* Página de alquileres activos - Empleado y Administrador */}
+<Route
+  path="/dashboard/alquileres-activos"
+  element={
+    <ProtectedRoute allowedRoles={['ADMINISTRADOR', 'EMPLEADO']}>
+      <AlquileresActivosPage />
+    </ProtectedRoute>
+  }
+/>
+
     </Routes>
   );
 }

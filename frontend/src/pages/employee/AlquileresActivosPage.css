@@ -1,0 +1,41 @@
+
+.alquileres-page {
+  min-height: 100vh;
+}
+
+.alquileres-page .card {
+  border-radius: 12px;
+}
+
+.alquileres-page .table th {
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  padding: 16px;
+}
+
+.alquileres-page .table td {
+  font-size: 14px;
+  padding: 16px;
+}
+
+.alquileres-page .table tbody tr {
+  transition: background-color 0.2s ease;
+}
+
+.alquileres-page .badge {
+  padding: 8px 12px;
+  font-size: 12px;
+}
+
+@media (max-width: 768px) {
+  .alquileres-page h2 {
+    font-size: 23px;
+  }
+
+  .alquileres-page .table th,
+  .alquileres-page .table td {
+    font-size: 13px;
+    padding: 12px;
+  }
+}
