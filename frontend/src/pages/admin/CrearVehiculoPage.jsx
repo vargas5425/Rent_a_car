@@ -7,7 +7,8 @@ export default function CrearVehiculoPage() {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     placa: '', marca: '', modelo: '', anio: 2024, 
-    categoria_id: 1, transmision: 'MANUAL', pasajeros: 5, kilometraje_actual: 0
+    categoria_id: 1, transmision: 'MANUAL', pasajeros: 5, kilometraje_actual: 0,
+    precio_hora: 40, precio_dia: 300
   });
   const [error, setError] = useState('');
 
@@ -69,6 +70,17 @@ export default function CrearVehiculoPage() {
               <div className="col-md-6 mb-3">
                 <label className="form-label">Pasajeros</label>
                 <input type="number" name="pasajeros" className="form-control" onChange={handleChange} value={formData.pasajeros} required />
+              </div>
+            </div>
+
+            <div className="row">
+              <div className="col-md-6 mb-3">
+                <label className="form-label">Precio por hora (Bs)</label>
+                <input type="number" min="1" step="0.01" name="precio_hora" className="form-control" onChange={handleChange} value={formData.precio_hora} required />
+              </div>
+              <div className="col-md-6 mb-3">
+                <label className="form-label">Precio por día (Bs)</label>
+                <input type="number" min="1" step="0.01" name="precio_dia" className="form-control" onChange={handleChange} value={formData.precio_dia} required />
               </div>
             </div>
 

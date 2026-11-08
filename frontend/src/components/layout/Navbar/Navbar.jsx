@@ -29,9 +29,14 @@ export default function Navbar() {
           {usuario ? (
             <>
               {usuario.rol === 'CLIENTE' && (
-                <Link to="/vehiculos" className="nav-link-custom" style={{ color: '#3b82f6', fontWeight: '600' }}>
-                  List Cars
-                </Link>
+                <>
+                  <Link to="/vehiculos" className="nav-link-custom" style={{ color: '#3b82f6', fontWeight: '600' }}>
+                    List Cars
+                  </Link>
+                  <Link to="/mis-reservas" className="nav-link-custom" style={{ color: '#3b82f6', fontWeight: '600' }}>
+                    Mis Reservas
+                  </Link>
+                </>
               )}
               {(usuario.rol === 'ADMINISTRADOR' || usuario.rol === 'EMPLEADO') && (
                 <>
@@ -40,6 +45,9 @@ export default function Navbar() {
                   </Link>
                   <Link to="/dashboard" className="nav-link-custom" style={{ color: '#3b82f6', fontWeight: '600' }}>
                     Dashboard
+                  </Link>
+                  <Link to="/dashboard/reservas" className="nav-link-custom" style={{ color: '#3b82f6', fontWeight: '600' }}>
+                    Reservas
                   </Link>
                 </>
               )}

@@ -42,7 +42,7 @@ export default function DashboardPage() {
               </div>
               <h4 className="fw-bold mb-1">Reservas</h4>
               <p className="text-muted mb-4" style={{ fontSize: '0.9rem' }}>Revisa las reservas de los clientes y gestiona las entregas.</p>
-              <button className="btn btn-outline-secondary w-100 mt-auto" disabled>Próximamente</button>
+              <Link to="/dashboard/reservas" className="btn btn-dark w-100 mt-auto">Ir a Reservas</Link>
             </div>
           </div>
 

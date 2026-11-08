@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import { sequelize } from './infrastructure/models/index.js';
 import authRoutes from './presentation/routes/authRoutes.js'; 
 import vehiculoRoutes from './presentation/routes/vehiculoRoutes.js';
+import reservaRoutes from './presentation/routes/reservaRoutes.js';
 
 dotenv.config();
 
@@ -15,6 +16,7 @@ app.use(express.json());
 
 app.use('/api/auth', authRoutes);
 app.use('/api/vehiculos', vehiculoRoutes);
+app.use('/api/reservas', reservaRoutes);
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'Rent a Car API funcionando' });

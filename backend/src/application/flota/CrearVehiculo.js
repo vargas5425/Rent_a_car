@@ -1,6 +1,6 @@
 import VehiculoRepository from '../../infrastructure/repositories/VehiculoRepository.js';
 
-export async function crearVehiculo({ placa, marca, modelo, anio, categoria_id, transmision, pasajeros, kilometraje_actual, imagen_url }) {
+export async function crearVehiculo({ placa, marca, modelo, anio, categoria_id, transmision, pasajeros, kilometraje_actual, imagen_url, precio_hora, precio_dia }) {
   // 1. Validaciones básicas
   if (!placa || !marca || !modelo || !anio || !categoria_id) {
     throw new Error('Faltan campos obligatorios');
@@ -20,7 +20,9 @@ export async function crearVehiculo({ placa, marca, modelo, anio, categoria_id, 
     transmision: transmision || 'MANUAL',
     pasajeros: pasajeros || 5,
     kilometraje_actual: kilometraje_actual || 0,
-    estado: 'DISPONIBLE', 
+    precio_hora: precio_hora || 40,
+    precio_dia: precio_dia || 300,
+    estado: 'DISPONIBLE',
     imagen_url: imagen_url || 'https://via.placeholder.com/300x200?text=Auto',
     activo: true
   });
