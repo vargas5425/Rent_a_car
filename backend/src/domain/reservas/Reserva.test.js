@@ -7,7 +7,8 @@ import {
   cancelar,
   bloqueaDisponibilidad,
   calcularTotalReserva,
-  validarNuevaReserva
+  validarNuevaReserva,
+  validarVehiculoReservable
 } from './Reserva.js';
 import { ReservaError } from './ReservaError.js';
 
@@ -170,5 +171,45 @@ describe('Validación de una reserva nueva', () => {
     expect(() =>
       validarNuevaReserva({ fechaInicio: enHoras(24), fechaFin: enHoras(28), modalidad: 'SEMANA' })
     ).toThrow(ReservaError);
+  });
+});
+
+describe('Impedir reservar una unidad no disponible', () => {
+  // Ejecuta la validación y devuelve el error que lanzó (o undefined si no lanzó ninguno).
+  const capturar = (vehiculo) => {
+    try {
+      validarVehiculoReservable(vehiculo);
+    } catch (error) {
+      return error;
+    }
+    return undefined;
+  };
+
+  it('Acepta una unidad DISPONIBLE y activa', () => {
+    expect(capturar({ id: 1, estado: 'DISPONIBLE', activo: true })).toBe(undefined);
+  });
+
+  it('Rechaza una unidad en MANTENIMIENTO con un conflicto 409', () => {
+    const error = capturar({ id: 3, estado: 'MANTENIMIENTO', activo: true });
+    expect(error).toBeInstanceOf(ReservaError);
+    expect(error.codigo).toBe('CONFLICTO');
+    expect(error.status).toBe(409);
+  });
+
+  it('Rechaza una unidad que no existe con un 404', () => {
+    const error = capturar(null);
+    expect(error).toBeInstanceOf(ReservaError);
+    expect(error.codigo).toBe('NO_ENCONTRADA');
+    expect(error.status).toBe(404);
+  });
+
+  it('Rechaza una unidad dada de baja (activo = false) con un 404', () => {
+    const error = capturar({ id: 4, estado: 'DISPONIBLE', activo: false });
+    expect(error).toBeInstanceOf(ReservaError);
+    expect(error.status).toBe(404);
+  });
+
+  it('Una unidad ALQUILADA hoy no se rechaza aquí: el solapamiento de fechas decide', () => {
+    expect(capturar({ id: 2, estado: 'ALQUILADA', activo: true })).toBe(undefined);
   });
 });

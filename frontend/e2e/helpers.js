@@ -29,6 +29,15 @@ export function franjaLibre(horas = 4) {
   };
 }
 
+// Una franja de 4 horas que empezó ayer: sirve para probar que el formulario rechaza fechas pasadas.
+export function franjaPasada(horas = 4) {
+  const inicio = new Date(Date.now() - 24 * 60 * 60 * 1000);
+  inicio.setSeconds(0, 0);
+  const fin = new Date(inicio.getTime() + horas * 60 * 60 * 1000);
+
+  return { inicio: aInputFecha(inicio), fin: aInputFecha(fin) };
+}
+
 // Inicia sesión por la pantalla de login, como lo haría una persona.
 export async function loginPorUI(page, { email, password }) {
   await page.goto('/login');

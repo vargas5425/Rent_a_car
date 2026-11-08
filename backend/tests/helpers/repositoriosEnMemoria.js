@@ -5,7 +5,9 @@ import { ESTADOS_BLOQUEANTES } from '../../src/domain/reservas/Reserva.js';
 // repositorios reales (ReservaRepository / VehiculoRepository), así los casos de uso
 // se prueban de punta a punta sin necesitar MySQL.
 
-export function crearVehiculoRepoEnMemoria() {
+// Recibe el repositorio de reservas en memoria para poder responder findDisponibles
+// (qué vehículos no tienen una reserva bloqueante en ese intervalo), igual que la consulta SQL real.
+export function crearVehiculoRepoEnMemoria(reservaRepo = { idsVehiculosOcupados: async () => [] }) {
   const vehiculos = [
     { id: 1, placa: 'SUV-01', marca: 'Toyota', modelo: 'RAV4', estado: 'DISPONIBLE', activo: true, precio_hora: 40, precio_dia: 300 },
     { id: 2, placa: 'SED-04', marca: 'Toyota', modelo: 'Corolla', estado: 'DISPONIBLE', activo: true, precio_hora: 30, precio_dia: 250 },
@@ -20,6 +22,12 @@ export function crearVehiculoRepoEnMemoria() {
     async findById(id) {
       const v = vehiculos.find((x) => x.id === Number(id));
       return v ? { ...v } : null;
+    },
+    async findDisponibles(inicio, fin) {
+      const ocupados = new Set(await reservaRepo.idsVehiculosOcupados(inicio, fin));
+      return vehiculos
+        .filter((v) => v.activo && v.estado !== 'MANTENIMIENTO' && !ocupados.has(v.id))
+        .map((v) => ({ ...v }));
     }
   };
 }
@@ -61,6 +69,17 @@ export function crearReservaRepoEnMemoria() {
     async actualizarEstado(id, estado) {
       const r = reservas.find((x) => x.id === Number(id));
       if (!r) return null;
+      r.estado = estado;
+      return { ...r };
+    },
+
+    // Como el real: solo cambia el estado si ninguna OTRA reserva vigente choca con la suya.
+    async actualizarEstadoSiLibre(id, estado) {
+      const r = reservas.find((x) => x.id === Number(id));
+      if (!r) return null;
+      if (reservas.some((otra) => otra.id !== r.id && choca(otra, r.vehiculo_id, r.fecha_inicio, r.fecha_fin))) {
+        return null;
+      }
       r.estado = estado;
       return { ...r };
     },

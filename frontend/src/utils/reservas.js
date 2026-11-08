@@ -43,6 +43,24 @@ export function aInputFecha(fecha) {
   return `${d.getFullYear()}-${dos(d.getMonth() + 1)}-${dos(d.getDate())}T${dos(d.getHours())}:${dos(d.getMinutes())}`;
 }
 
+// Valida el formulario de búsqueda ANTES de llamar a la API.
+// Devuelve el mensaje de error, o '' si las fechas están bien.
+// Son las mismas reglas que aplica el backend (SolapamientoService.validarFechas): formato válido,
+// inicio no en el pasado y fin posterior al inicio. Aquí solo se avisa antes, sin viajar al servidor;
+// el backend sigue validando siempre.
+export function validarBusqueda({ inicio, fin, ahora = new Date() }) {
+  if (!inicio || !fin) return 'Elige la fecha de inicio y la de fin.';
+
+  const desde = new Date(inicio).getTime();
+  const hasta = new Date(fin).getTime();
+
+  if (Number.isNaN(desde) || Number.isNaN(hasta)) return 'Una de las fechas no tiene un formato válido.';
+  if (desde < ahora.getTime()) return 'La fecha de recogida no puede estar en el pasado.';
+  if (hasta <= desde) return 'La fecha de devolución debe ser posterior a la de recogida.';
+
+  return '';
+}
+
 // Cualquier fracción se cobra como unidad completa: 4h15 por hora = 5 horas; 1 día y 2 horas por día = 2 días.
 export function calcularTotal({ fechaInicio, fechaFin, modalidad, precioUnitario }) {
   const inicio = new Date(fechaInicio).getTime();

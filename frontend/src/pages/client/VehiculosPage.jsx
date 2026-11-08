@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../../services/api';
 import { buscarDisponibles } from '../../services/reservasService';
-import { aInputFecha, formatearBs } from '../../utils/reservas';
+import { aInputFecha, formatearBs, validarBusqueda } from '../../utils/reservas';
 import Navbar from '../../components/layout/Navbar/Navbar';
 import Footer from '../../components/layout/Footer/Footer';
 
@@ -51,8 +51,9 @@ export default function VehiculosPage() {
     e.preventDefault();
     setErrorBusqueda('');
 
-    if (!inicio || !fin) {
-      setErrorBusqueda('Elige la fecha de inicio y la de fin.');
+    const mensaje = validarBusqueda({ inicio, fin });
+    if (mensaje) {
+      setErrorBusqueda(mensaje);
       return;
     }
 
@@ -97,7 +98,9 @@ export default function VehiculosPage() {
         </div>
 
         {/* Buscador por fechas */}
-        <form onSubmit={handleBuscar} className="card p-4 mb-5" data-testid="form-busqueda">
+        {/* noValidate: así el navegador no bloquea el envío con su propio aviso (por el atributo min)
+            y se muestran nuestros mensajes de validarBusqueda. */}
+        <form onSubmit={handleBuscar} noValidate className="card p-4 mb-5" data-testid="form-busqueda">
           <div className="row g-3 align-items-end">
             <div className="col-md-4">
               <label className="form-label fw-semibold" htmlFor="busqueda-inicio">Recogida</label>

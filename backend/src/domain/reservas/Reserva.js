@@ -1,6 +1,6 @@
 import { calcularPrecio } from '../tarifas/TarifaService.js';
 import { validarFechas } from '../disponibilidad/SolapamientoService.js';
-import { errorValidacion, errorTransicion } from './ReservaError.js';
+import { errorValidacion, errorTransicion, errorNoEncontrada, errorConflicto } from './ReservaError.js';
 
 // ---------------------------------------------------------------------------
 // Estados y máquina de estados (ver backend/reglas.md, sección 4)
@@ -89,6 +89,19 @@ export function validarNuevaReserva({ fechaInicio, fechaFin, modalidad }) {
     throw errorValidacion(`Modalidad no válida. Usa: ${MODALIDADES_SOPORTADAS.join(' o ')}`);
   }
   validarIntervalo(fechaInicio, fechaFin);
+}
+
+// ¿Se puede reservar esta unidad? No si no existe / está dada de baja (404) o si está en
+// MANTENIMIENTO (409, bloquea hasta que el Admin la libere: backend/reglas.md, sección 3).
+// Que el auto esté ALQUILADO hoy no lo impide: lo decide el solapamiento de fechas.
+// Se usa al crear una reserva y otra vez al confirmarla.
+export function validarVehiculoReservable(vehiculo) {
+  if (!vehiculo || vehiculo.activo === false) {
+    throw errorNoEncontrada('Vehículo no encontrado');
+  }
+  if (vehiculo.estado === 'MANTENIMIENTO') {
+    throw errorConflicto('El vehículo está en mantenimiento y no se puede reservar');
+  }
 }
 
 // Cualquier fracción se cobra como unidad completa (4h15 por hora = 5 horas).

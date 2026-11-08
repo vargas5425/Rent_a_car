@@ -1,5 +1,11 @@
-import { ESTADOS, transicionar, cancelar, validarIntervalo } from '../../domain/reservas/Reserva.js';
-import { errorNoEncontrada } from '../../domain/reservas/ReservaError.js';
+import {
+  ESTADOS,
+  transicionar,
+  cancelar,
+  validarIntervalo,
+  validarVehiculoReservable
+} from '../../domain/reservas/Reserva.js';
+import { errorNoEncontrada, errorConflicto } from '../../domain/reservas/ReservaError.js';
 
 const ROLES_STAFF = ['EMPLEADO', 'ADMINISTRADOR'];
 
@@ -35,12 +41,22 @@ export function construirGestionReservas({ reservaRepo, vehiculoRepo }) {
     },
 
     // Empleado / Administrador: RESERVADA -> CONFIRMADA
+    // Antes de confirmar se REVALIDA: entre que el cliente reservó y el empleado confirma pueden
+    // pasar horas o días, y en ese tiempo el auto pudo pasar a MANTENIMIENTO o aparecer otra
+    // reserva vigente en el mismo horario. Si algo de eso pasó, no se confirma (409).
     async confirmarReserva(id) {
       const reserva = await reservaRepo.findById(Number(id));
       if (!reserva) throw errorNoEncontrada();
 
       const nuevoEstado = transicionar(reserva.estado, ESTADOS.CONFIRMADA);
-      return await reservaRepo.actualizarEstado(reserva.id, nuevoEstado);
+
+      validarVehiculoReservable(await vehiculoRepo.findById(reserva.vehiculo_id));
+
+      const confirmada = await reservaRepo.actualizarEstadoSiLibre(reserva.id, nuevoEstado);
+      if (!confirmada) {
+        throw errorConflicto('El vehículo ya no está libre en ese horario; no se puede confirmar la reserva');
+      }
+      return confirmada;
     },
 
     // Cliente (solo las suyas) o staff. Solo desde RESERVADA o CONFIRMADA.
@@ -53,19 +69,11 @@ export function construirGestionReservas({ reservaRepo, vehiculoRepo }) {
       return await reservaRepo.actualizarEstado(reserva.id, nuevoEstado);
     },
 
-    // Vehículos que se pueden reservar en [fechaInicio, fechaFin)
+    // Vehículos que se pueden reservar en [fechaInicio, fechaFin).
+    // El filtrado (activos, sin mantenimiento, sin reservas que choquen) lo hace la base de datos.
     async buscarVehiculosDisponibles({ fechaInicio, fechaFin }) {
       validarIntervalo(fechaInicio, fechaFin);
-
-      const [vehiculos, idsOcupados] = await Promise.all([
-        vehiculoRepo.findAll(),
-        reservaRepo.idsVehiculosOcupados(new Date(fechaInicio), new Date(fechaFin))
-      ]);
-      const ocupados = new Set(idsOcupados.map(Number));
-
-      return vehiculos.filter(
-        (v) => v.activo !== false && v.estado !== 'MANTENIMIENTO' && !ocupados.has(Number(v.id))
-      );
+      return await vehiculoRepo.findDisponibles(new Date(fechaInicio), new Date(fechaFin));
     }
   };
 }

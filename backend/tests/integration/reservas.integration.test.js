@@ -23,7 +23,7 @@ let gestion;
 
 beforeEach(() => {
   reservaRepo = crearReservaRepoEnMemoria();
-  vehiculoRepo = crearVehiculoRepoEnMemoria();
+  vehiculoRepo = crearVehiculoRepoEnMemoria(reservaRepo);
   crearReserva = construirCrearReserva({ reservaRepo, vehiculoRepo });
   gestion = construirGestionReservas({ reservaRepo, vehiculoRepo });
 });
@@ -253,5 +253,171 @@ describe('Integración: confirmar reserva (empleado)', () => {
 
   it('Una reserva inexistente da 404', async () => {
     await esperarFallo(gestion.confirmarReserva(999), 'NO_ENCONTRADA', 404);
+  });
+});
+
+describe('Integración: revalidar la disponibilidad al confirmar', () => {
+  // Una reserva vigente "colada" en el mismo horario, como si hubiera entrado por otro camino
+  // (la creación normal no deja que dos reservas vigentes se crucen).
+  const colarReserva = (estado, desdeH, hastaH, vehiculoId = 1) =>
+    reservaRepo.reservas.push({
+      id: 99,
+      usuario_id: LUIS.id,
+      vehiculo_id: vehiculoId,
+      fecha_inicio: enHoras(desdeH),
+      fecha_fin: enHoras(hastaH),
+      modalidad: 'HORA',
+      precio_unitario: 40,
+      total: 160,
+      estado
+    });
+
+  it('No confirma si otra reserva vigente ocupa el mismo horario (409) y deja la reserva como estaba', async () => {
+    const reserva = await reservar(ANA, 48, 52);
+    colarReserva(ESTADOS.CONFIRMADA, 50, 54);
+
+    await esperarFallo(gestion.confirmarReserva(reserva.id), 'CONFLICTO', 409);
+
+    const guardada = await gestion.obtenerReserva(reserva.id, ANA);
+    expect(guardada.estado).toBe(ESTADOS.RESERVADA);
+  });
+
+  it('Una reserva CANCELADA en el mismo horario no impide confirmar', async () => {
+    const reserva = await reservar(ANA, 48, 52);
+    colarReserva(ESTADOS.CANCELADA, 50, 54);
+
+    const confirmada = await gestion.confirmarReserva(reserva.id);
+    expect(confirmada.estado).toBe(ESTADOS.CONFIRMADA);
+  });
+
+  it('Una reserva vigente de OTRO vehículo en el mismo horario no impide confirmar', async () => {
+    const reserva = await reservar(ANA, 48, 52, 1);
+    colarReserva(ESTADOS.CONFIRMADA, 48, 52, 2);
+
+    const confirmada = await gestion.confirmarReserva(reserva.id);
+    expect(confirmada.estado).toBe(ESTADOS.CONFIRMADA);
+  });
+
+  it('No confirma si el vehículo pasó a MANTENIMIENTO después de reservar (409)', async () => {
+    const reserva = await reservar(ANA, 48, 52);
+    vehiculoRepo.vehiculos[0].estado = 'MANTENIMIENTO';
+
+    await esperarFallo(gestion.confirmarReserva(reserva.id), 'CONFLICTO', 409);
+
+    const guardada = await gestion.obtenerReserva(reserva.id, ANA);
+    expect(guardada.estado).toBe(ESTADOS.RESERVADA);
+  });
+
+  it('Sigue validando primero la transición de estado (una cancelada da TRANSICION_INVALIDA)', async () => {
+    const reserva = await reservar(ANA, 48, 52);
+    await gestion.cancelarReserva(reserva.id, ANA);
+    vehiculoRepo.vehiculos[0].estado = 'MANTENIMIENTO';
+
+    await esperarFallo(gestion.confirmarReserva(reserva.id), 'TRANSICION_INVALIDA', 409);
+  });
+});
+
+describe('Integración: consultar disponibilidad', () => {
+  const consultar = (desdeH, hastaH) =>
+    gestion.buscarVehiculosDisponibles({ fechaInicio: enHoras(desdeH), fechaFin: enHoras(hastaH) });
+
+  it('Sin reservas devuelve todas las unidades, menos las que están en MANTENIMIENTO', async () => {
+    const ids = (await consultar(48, 52)).map((v) => v.id);
+    expect(ids).toEqual([1, 2]);
+  });
+
+  it('No devuelve unidades dadas de baja', async () => {
+    vehiculoRepo.vehiculos[1].activo = false;
+
+    const ids = (await consultar(48, 52)).map((v) => v.id);
+    expect(ids).toEqual([1]);
+  });
+
+  it('Un horario que termina justo cuando empieza una reserva (o empieza justo cuando termina) no la ve como ocupada', async () => {
+    // Se reutilizan las MISMAS fechas como borde, para que no haya milisegundos de diferencia.
+    const inicioReserva = enHoras(48);
+    const finReserva = enHoras(52);
+    await crearReserva({
+      usuarioId: ANA.id,
+      vehiculoId: 1,
+      fechaInicio: inicioReserva,
+      fechaFin: finReserva,
+      modalidad: 'HORA'
+    });
+
+    const antes = await gestion.buscarVehiculosDisponibles({ fechaInicio: enHoras(44), fechaFin: inicioReserva });
+    const despues = await gestion.buscarVehiculosDisponibles({ fechaInicio: finReserva, fechaFin: enHoras(56) });
+
+    expect(antes.map((v) => v.id)).toContain(1);
+    expect(despues.map((v) => v.id)).toContain(1);
+  });
+
+  it('Un horario que se cruza con la reserva aunque sea un poco la ve como ocupada', async () => {
+    await reservar(ANA, 48, 52, 1);
+
+    expect((await consultar(44, 49)).map((v) => v.id)).not.toContain(1);
+    expect((await consultar(51, 56)).map((v) => v.id)).not.toContain(1);
+  });
+
+  it('Rechaza fechas inválidas con un error 400', async () => {
+    await esperarFallo(consultar(52, 48), 'VALIDACION', 400); // fin antes que inicio
+    await esperarFallo(consultar(-5, 2), 'VALIDACION', 400); // inicio en el pasado
+    await esperarFallo(
+      gestion.buscarVehiculosDisponibles({ fechaInicio: 'mañana', fechaFin: 'pasado' }),
+      'VALIDACION',
+      400
+    );
+  });
+});
+
+describe('Integración: la segunda reserva solapada se rechaza', () => {
+  // La primera reserva es de 48 a 52 horas desde ahora; estas son segundas reservas que chocan.
+  const choques = [
+    ['idéntica', 48, 52],
+    ['empieza antes y termina dentro', 46, 50],
+    ['empieza dentro y termina después', 50, 54],
+    ['queda contenida', 49, 51],
+    ['envuelve a la primera', 46, 54]
+  ];
+
+  choques.forEach(([descripcion, desdeH, hastaH]) => {
+    it(`Rechaza la segunda reserva (${descripcion}) con CONFLICTO 409`, async () => {
+      await reservar(ANA, 48, 52);
+      await esperarFallo(reservar(LUIS, desdeH, hastaH), 'CONFLICTO', 409);
+    });
+  });
+
+  it('Al rechazarla no guarda nada: solo queda la primera reserva', async () => {
+    await reservar(ANA, 48, 52);
+    await esperarFallo(reservar(LUIS, 50, 54), 'CONFLICTO');
+
+    expect(reservaRepo.reservas).toHaveLength(1);
+    expect(reservaRepo.reservas[0].usuario_id).toBe(ANA.id);
+  });
+});
+
+describe('Integración: liberar el intervalo al cancelar (flujo completo)', () => {
+  it('Tras cancelar, la reserva que antes chocaba se crea y se puede confirmar', async () => {
+    const primera = await reservar(ANA, 48, 52);
+    await esperarFallo(reservar(LUIS, 50, 54), 'CONFLICTO');
+
+    await gestion.cancelarReserva(primera.id, ANA);
+
+    const segunda = await reservar(LUIS, 50, 54);
+    const confirmada = await gestion.confirmarReserva(segunda.id);
+    expect(confirmada.estado).toBe(ESTADOS.CONFIRMADA);
+  });
+
+  it('Cancelar solo libera ese vehículo: el otro sigue como estaba', async () => {
+    const enAuto1 = await reservar(ANA, 48, 52, 1);
+    await reservar(LUIS, 48, 52, 2);
+
+    await gestion.cancelarReserva(enAuto1.id, ANA);
+
+    const ids = (
+      await gestion.buscarVehiculosDisponibles({ fechaInicio: enHoras(48), fechaFin: enHoras(52) })
+    ).map((v) => v.id);
+    expect(ids).toContain(1); // liberado
+    expect(ids).not.toContain(2); // sigue reservado
   });
 });

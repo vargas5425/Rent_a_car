@@ -1,9 +1,10 @@
 import {
   ESTADOS,
   validarNuevaReserva,
+  validarVehiculoReservable,
   calcularTotalReserva
 } from '../../domain/reservas/Reserva.js';
-import { errorValidacion, errorNoEncontrada, errorConflicto } from '../../domain/reservas/ReservaError.js';
+import { errorValidacion, errorConflicto } from '../../domain/reservas/ReservaError.js';
 
 // Caso de uso: un cliente reserva un vehículo para un intervalo.
 // Recibe los repositorios como parámetro (inyección de dependencias) para poder
@@ -18,12 +19,7 @@ export function construirCrearReserva({ reservaRepo, vehiculoRepo }) {
 
     // 2. El vehículo debe existir y poder alquilarse
     const vehiculo = await vehiculoRepo.findById(Number(vehiculoId));
-    if (!vehiculo || vehiculo.activo === false) {
-      throw errorNoEncontrada('Vehículo no encontrado');
-    }
-    if (vehiculo.estado === 'MANTENIMIENTO') {
-      throw errorConflicto('El vehículo está en mantenimiento y no se puede reservar');
-    }
+    validarVehiculoReservable(vehiculo);
 
     // 3. Precio: se toma la tarifa vigente y se guarda una "foto" en la reserva
     const precioUnitario = Number(modalidad === 'HORA' ? vehiculo.precio_hora : vehiculo.precio_dia);

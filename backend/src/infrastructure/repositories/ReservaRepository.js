@@ -68,6 +68,35 @@ class ReservaRepository {
     return await this.findById(id);
   }
 
+  // Cambia el estado SOLO si el intervalo de esta reserva sigue libre; si otra reserva vigente
+  // ya lo ocupa, no cambia nada y devuelve null. Es la "revalidación" antes de confirmar:
+  // misma transacción y mismo bloqueo del vehículo que crearSiDisponible, para que una
+  // confirmación no se cruce con otra operación sobre el mismo auto.
+  // La propia reserva se excluye de la comparación (id distinto), si no chocaría consigo misma.
+  async actualizarEstadoSiLibre(id, estado) {
+    const hecho = await sequelize.transaction(async (t) => {
+      const reserva = await ReservaModel.findByPk(id, { transaction: t });
+      if (!reserva) return false;
+
+      await VehiculoModel.findByPk(reserva.vehiculo_id, { transaction: t, lock: t.LOCK.UPDATE });
+
+      const choque = await ReservaModel.findOne({
+        where: {
+          vehiculo_id: reserva.vehiculo_id,
+          id: { [Op.ne]: reserva.id },
+          ...condicionSolapamiento(reserva.fecha_inicio, reserva.fecha_fin)
+        },
+        transaction: t
+      });
+      if (choque) return false;
+
+      await reserva.update({ estado }, { transaction: t });
+      return true;
+    });
+
+    return hecho ? await this.findById(id) : null;
+  }
+
   // Ids de los vehículos que tienen una reserva bloqueante que choca con [inicio, fin).
   async idsVehiculosOcupados(inicio, fin) {
     const reservas = await ReservaModel.findAll({
