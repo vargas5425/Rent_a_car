@@ -7,7 +7,8 @@ export default function CrearVehiculoPage() {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     placa: '', marca: '', modelo: '', anio: 2024, 
-    categoria_id: 1, transmision: 'MANUAL', pasajeros: 5, kilometraje_actual: 0
+    categoria_id: 1, transmision: 'MANUAL', pasajeros: 5, kilometraje_actual: 0,
+    precio_hora: 40, precio_dia: 300
   });
   const [error, setError] = useState('');
 
@@ -30,45 +31,56 @@ export default function CrearVehiculoPage() {
   };
 
   return (
-    <div>
+    <div style={{ backgroundColor: 'var(--rc-bg)', minHeight: '100vh' }}>
       <Navbar />
       <div className="container py-5" style={{ marginTop: '80px', maxWidth: '600px' }}>
         <div className="card shadow border-0 p-4">
-          <h2 className="fw-bold mb-4">Registrar Nuevo Vehículo</h2>
+          <h2 className="fw-bold mb-4" style={{ color: 'var(--rc-text)' }}>Registrar Nuevo Vehículo</h2>
           
           {error && <div className="alert alert-danger">{error}</div>}
 
           <form onSubmit={handleSubmit}>
             <div className="row">
               <div className="col-md-6 mb-3">
-                <label className="form-label">Placa / Código</label>
+                <label className="form-label" style={{ color: 'var(--rc-text)' }}>Placa / Código</label>
                 <input type="text" name="placa" className="form-control" onChange={handleChange} required />
               </div>
               <div className="col-md-6 mb-3">
-                <label className="form-label">Año</label>
+                <label className="form-label" style={{ color: 'var(--rc-text)' }}>Año</label>
                 <input type="number" name="anio" className="form-control" onChange={handleChange} value={formData.anio} required />
               </div>
             </div>
 
             <div className="row">
               <div className="col-md-6 mb-3">
-                <label className="form-label">Marca</label>
+                <label className="form-label" style={{ color: 'var(--rc-text)' }}>Marca</label>
                 <input type="text" name="marca" className="form-control" onChange={handleChange} required />
               </div>
               <div className="col-md-6 mb-3">
-                <label className="form-label">Modelo</label>
+                <label className="form-label" style={{ color: 'var(--rc-text)' }}>Modelo</label>
                 <input type="text" name="modelo" className="form-control" onChange={handleChange} required />
               </div>
             </div>
 
             <div className="row">
               <div className="col-md-6 mb-3">
-                <label className="form-label">Categoría ID (1: SUV, 2: Sedán, 3: Hatchback)</label>
+                <label className="form-label" style={{ color: 'var(--rc-text)' }}>Categoría ID (1: SUV, 2: Sedán, 3: Hatchback)</label>
                 <input type="number" name="categoria_id" className="form-control" onChange={handleChange} value={formData.categoria_id} required />
               </div>
               <div className="col-md-6 mb-3">
-                <label className="form-label">Pasajeros</label>
+                <label className="form-label" style={{ color: 'var(--rc-text)' }}>Pasajeros</label>
                 <input type="number" name="pasajeros" className="form-control" onChange={handleChange} value={formData.pasajeros} required />
+              </div>
+            </div>
+
+            <div className="row">
+              <div className="col-md-6 mb-3">
+                <label className="form-label" style={{ color: 'var(--rc-text)' }}>Precio por hora (Bs)</label>
+                <input type="number" min="1" step="0.01" name="precio_hora" className="form-control" onChange={handleChange} value={formData.precio_hora} required />
+              </div>
+              <div className="col-md-6 mb-3">
+                <label className="form-label" style={{ color: 'var(--rc-text)' }}>Precio por día (Bs)</label>
+                <input type="number" min="1" step="0.01" name="precio_dia" className="form-control" onChange={handleChange} value={formData.precio_dia} required />
               </div>
             </div>
 

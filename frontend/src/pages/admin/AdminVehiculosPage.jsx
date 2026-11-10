@@ -52,7 +52,7 @@ export default function AdminVehiculosPage() {
   return (
     <div>
       <Navbar />
-      <div className="container py-5" style={{ marginTop: '80px', minHeight: '80vh' }}>
+      <div className="container py-5" style={{ marginTop: '80px', minHeight: '80vh', backgroundColor: 'var(--rc-bg)' }}>
         <div className="d-flex justify-content-between align-items-center mb-4">
           <h2 className="fw-bold">Gestión de Vehículos (Admin)</h2>
           <Link to="/vehiculos/crear" className="btn btn-dark">

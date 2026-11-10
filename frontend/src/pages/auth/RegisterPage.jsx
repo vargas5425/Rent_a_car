@@ -50,8 +50,7 @@ export default function RegisterPage() {
         <div className="col-md-6 d-flex align-items-center justify-content-center bg-white position-relative">
           
           {/* 👇 BOTÓN VOLVER AL INICIO */}
-          <Link to="/" className="position-absolute top-0 start-0 m-4 d-flex align-items-center gap-2 text-decoration-none text-dark fw-bold">
-            
+          <Link to="/" className="btn-volver-inicio position-absolute top-0 start-0 m-4 d-flex align-items-center gap-2 text-decoration-none fw-bold">
             Volver al inicio
           </Link>
 

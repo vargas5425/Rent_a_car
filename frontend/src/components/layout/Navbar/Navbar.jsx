@@ -1,25 +1,35 @@
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../context/useAuth';
+import ThemeToggle from './ThemeToggle';
 import logo from '../../../assets/images/logo.png';
 import './Navbar.css';
 
 export default function Navbar() {
   const { usuario, logout } = useAuth();
   const navigate = useNavigate();
+  const [scrolled, setScrolled] = useState(false);
+
+  // Efecto para que el navbar cambie al hacer scroll
+  useEffect(() => {
+    const handleScroll = () => setScrolled(window.scrollY > 40);
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const handleLogout = () => {
     logout();
-    navigate('/'); // Redirigir a la Landing Page al cerrar sesión
+    navigate('/');
   };
 
   return (
-    <nav className="navbar-custom">
+    <nav className={`navbar-custom ${scrolled ? 'rc-navbar--scrolled' : ''}`}>
       <div className="navbar-container">
         
         {/* LOGO Y MARCA */}
         <Link to="/" className="navbar-brand">
-          <img src={logo} alt="Tierra Camba" style={{ height: '40px' }} />
-          <span className="brand-name" style={{ color: '#0f172a', fontSize: '1.2rem' }}>
+          <img src={logo} alt="Tierra Camba" className="brand-logo" />
+          <span className="brand-name">
             Tierra Camba
           </span>
         </Link>
@@ -29,24 +39,20 @@ export default function Navbar() {
           {usuario ? (
             <>
               {usuario.rol === 'CLIENTE' && (
-                <Link to="/vehiculos" className="nav-link-custom" style={{ color: '#3b82f6', fontWeight: '600' }}>
+                <Link to="/vehiculos" className="nav-link-custom">
                   List Cars
                 </Link>
               )}
               {(usuario.rol === 'ADMINISTRADOR' || usuario.rol === 'EMPLEADO') && (
                 <>
-                  <Link to="/vehiculos" className="nav-link-custom" style={{ color: '#3b82f6', fontWeight: '600' }}>
-                    List Cars
-                  </Link>
-                  <Link to="/dashboard" className="nav-link-custom" style={{ color: '#3b82f6', fontWeight: '600' }}>
-                    Dashboard
-                  </Link>
+                  <Link to="/vehiculos" className="nav-link-custom">List Cars</Link>
+                  <Link to="/dashboard" className="nav-link-custom">Dashboard</Link>
                 </>
               )}
               
               <div className="user-menu ms-3">
                 <span className="user-name">Hola, {usuario.nombre}</span>
-                <button onClick={handleLogout} className="btn-logout">Cerrar Sesión</button>
+                <button onClick={handleLogout} className="btn-logout">Salir</button>
               </div>
             </>
           ) : (
@@ -55,6 +61,9 @@ export default function Navbar() {
               <Link to="/register" className="btn-register">Registrarse</Link>
             </div>
           )}
+
+          {/* El botón mágico de Work/Sleep */}
+          <ThemeToggle />
         </div>
       </div>
     </nav>
