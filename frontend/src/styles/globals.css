@@ -1,23 +1,54 @@
+/* =========================================================
+   Variables de tema (Modo Claro / Oscuro de tu compañero)
+   ========================================================= */
 :root {
-  --brand-primary: #0f172a;   /* Azul muy oscuro / Negro */
-  --brand-accent: #3b82f6;    /* Azul brillante para links */
-  --brand-bg: #f8fafc;        /* Gris muy claro para el fondo */
-  --brand-surface: #ffffff;   /* Blanco para tarjetas */
+  --rc-bg: #ffffff;
+  --rc-bg-alt: #f8fafc;
+  --rc-text: #334155;
+  --rc-muted: #6c757d;
+  --rc-card: #ffffff;
+  --rc-border: #dee2e6;
+  --rc-accent: #ffc107;
+  --rc-accent-2: #ff8a00;
+  
+  --brand-primary: #0f172a;
+  --brand-accent: #3b82f6;
+}
+
+[data-theme="dark"] {
+  --rc-bg: #0f131a;
+  --rc-bg-alt: #151a23;
+  --rc-text: #e8ebf0;
+  --rc-muted: #9aa4b2;
+  --rc-card: #1b212c;
+  --rc-border: #2b3340;
+  color-scheme: dark;
+}
+
+/* =========================================================
+   Estilos Globales Base
+   ========================================================= */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
 body {
   font-family: 'Inter', sans-serif;
-  background-color: var(--brand-bg);
-  color: #334155;
+  background-color: var(--rc-bg);
+  color: var(--rc-text);
   -webkit-font-smoothing: antialiased;
+  transition: background-color 0.3s, color 0.3s;
 }
 
-/* Hacer que todas las tarjetas se vean modernas */
+/* Tarjetas globales */
 .card {
-  border: none;
+  background-color: var(--rc-card);
+  border: 1px solid var(--rc-border);
   border-radius: 16px;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.3s;
 }
 
 .card:hover {
@@ -25,16 +56,120 @@ body {
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
 }
 
-/* Botones personalizados */
 .btn-dark {
   background-color: var(--brand-primary);
   border-radius: 8px;
   padding: 10px 20px;
   font-weight: 600;
   transition: all 0.2s;
+  color: white;
 }
 
 .btn-dark:hover {
   background-color: #1e293b;
+  color: white;
   transform: scale(1.02);
+}
+
+/* Adaptación de secciones al modo oscuro */
+.hero-section {
+  background-color: var(--rc-bg) !important;
+  transition: background-color 0.3s;
+}
+
+/* El título del Hero debe adaptarse */
+.hero-title {
+  color: var(--rc-text) !important;
+}
+
+/* Las tarjetas de info (la línea amarilla) */
+.info-section-container {
+  background-color: var(--rc-card) !important;
+  border-color: var(--rc-border) !important;
+}
+
+/* Textos generales */
+h1, h2, h3, h4, h5, h6, p, span, label {
+  color: var(--rc-text);
+}
+
+/* Si usas text-muted, que se adapte */
+.text-muted {
+  color: var(--rc-muted) !important;
+}
+
+/* El fondo de la sección de ciudades y footer si tienen color blanco fijo */
+.bg-white {
+  background-color: var(--rc-card) !important;
+}
+
+/* Ajuste para los inputs de los formularios en modo oscuro */
+.form-control, .form-select {
+  background-color: var(--rc-card) !important;
+  color: var(--rc-text) !important;
+  border-color: var(--rc-border) !important;
+}
+
+/* Botón de volver al inicio (Login/Registro) */
+.btn-volver-inicio {
+  color: var(--rc-text); /* Toma el color del tema (negro en claro, blanco en oscuro) */
+  transition: color 0.3s ease;
+}
+
+.btn-volver-inicio:hover {
+  color: var(--brand-accent); /* Se vuelve azul al pasar el mouse */
+}
+
+/* =========================================
+   Adaptación de Tablas para Modo Oscuro
+   ========================================= */
+.table {
+  color: var(--rc-text) !important;
+  border-color: var(--rc-border) !important;
+}
+
+.table-hover tbody tr:hover {
+  color: var(--rc-text) !important;
+  background-color: var(--rc-bg-alt) !important;
+}
+
+.table thead {
+  background-color: var(--rc-text) !important;
+  color: var(--rc-bg) !important;
+}
+
+/* Ajuste para los inputs del formulario de crear vehículo */
+.form-control, .form-select {
+  background-color: var(--rc-card) !important;
+  color: var(--rc-text) !important;
+  border-color: var(--rc-border) !important;
+}
+
+.form-control:focus, .form-select:focus {
+  background-color: var(--rc-card) !important;
+  color: var(--rc-text) !important;
+  border-color: var(--rc-accent) !important;
+}
+
+/* =========================================
+   Arreglo de Inputs en Login/Registro (Modo Oscuro)
+   ========================================= */
+input.form-control {
+  background-color: var(--rc-bg-alt) !important; /* Fondo gris claro/oscuro */
+  color: var(--rc-text) !important;              /* Texto negro/blanco */
+  border: 1px solid var(--rc-border) !important;
+}
+
+/* El texto de ejemplo (placeholder) */
+input.form-control::placeholder {
+  color: var(--rc-muted) !important;
+  opacity: 0.7;
+}
+
+/* Cuando el usuario hace clic en el input para escribir */
+input.form-control:focus {
+  background-color: var(--rc-bg-alt) !important;
+  color: var(--rc-text) !important;
+  border-color: var(--brand-accent) !important;
+  box-shadow: 0 0 0 0.25rem rgba(59, 130, 246, 0.25) !important;
 }

@@ -1,47 +1,81 @@
+/* Sección contenedora */
 .brands-section {
-  padding: 60px 0 100px;
-  background: #ffffff;
+  padding: 60px 0;
+  background: var(--rc-bg); /* Se adapta al modo oscuro */
+  overflow: hidden; /* Oculta lo que se sale de la pantalla */
+  border-top: 1px solid var(--rc-border);
+  border-bottom: 1px solid var(--rc-border);
+  transition: background 0.3s, border-color 0.3s;
 }
 
-.brands-container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 40px;
+/* Contenedor del efecto */
+.brands-marquee {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 40px;
-  flex-wrap: wrap;
+  width: 100%;
+  overflow: hidden;
+  position: relative;
 }
 
+/* El riel que se mueve */
+.brands-track {
+  display: flex;
+  align-items: center;
+  width: max-content;
+  animation: scrollLogos 30s linear infinite; /* 30s es la velocidad, si quieres más rápido bájalo a 20s */
+}
+
+/* Pausar animación al pasar el mouse */
+.brands-marquee:hover .brands-track {
+  animation-play-state: paused;
+}
+
+/* Cada logo */
 .brand-item {
-  flex: 1;
+  padding: 0 50px; /* Espacio entre logos */
   display: flex;
   justify-content: center;
   align-items: center;
-  filter: grayscale(100%);
-  opacity: 0.6;
-  transition: all 0.3s ease;
-}
-
-.brand-item:hover {
-  filter: grayscale(0%);
-  opacity: 1;
-  transform: translateY(-4px);
 }
 
 .brand-logo {
-  max-width: 80px;
+  max-width: 100px;
   height: auto;
   object-fit: contain;
+  filter: grayscale(100%) opacity(0.5); /* Efecto apagado por defecto */
+  transition: all 0.3s ease;
 }
 
+/* Al pasar el mouse, el logo toma color y se agranda */
+.brand-item:hover .brand-logo {
+  filter: grayscale(0%) opacity(1);
+  transform: scale(1.1);
+}
+
+/* Ajuste para modo oscuro (los logos blancos resaltan) */
+[data-theme="dark"] .brand-logo {
+  filter: grayscale(100%) invert(1) opacity(0.7); 
+}
+
+[data-theme="dark"] .brand-item:hover .brand-logo {
+  filter: grayscale(0%) invert(1) opacity(1);
+}
+
+/* Animación infinita */
+@keyframes scrollLogos {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%); /* Se mueve la mitad del ancho (porque duplicamos los elementos) */
+  }
+}
+
+/* Responsive */
 @media (max-width: 768px) {
-  .brands-container {
-    padding: 0 20px;
-    gap: 24px;
+  .brand-item {
+    padding: 0 25px;
   }
   .brand-logo {
-    max-width: 50px;
+    max-width: 70px;
   }
 }

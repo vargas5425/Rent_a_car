@@ -52,7 +52,7 @@ export default function AdminVehiculosPage() {
   return (
     <div>
       <Navbar />
-      <div className="container py-5" style={{ marginTop: '80px', minHeight: '80vh' }}>
+      <div className="container py-5" style={{ marginTop: '80px', minHeight: '80vh', backgroundColor: 'var(--rc-bg)' }}>
         <div className="d-flex justify-content-between align-items-center mb-4">
           <h2 className="fw-bold">Gestión de Vehículos (Admin)</h2>
           <Link to="/vehiculos/crear" className="btn btn-dark">
@@ -97,10 +97,10 @@ export default function AdminVehiculosPage() {
                       </span>
                     </td>
                     <td className="text-center">
-                      <button 
-                        className="btn btn-sm btn-outline-danger" 
-                        onClick={() => handleEliminar(auto.id)}
-                      >
+                      <Link to={`/dashboard/admin/vehiculos/${auto.id}/editar`} className="btn btn-sm btn-outline-dark me-2">
+                        Editar
+                      </Link>
+                      <button className="btn btn-sm btn-outline-danger" onClick={() => handleEliminar(auto.id)}>
                         Eliminar
                       </button>
                     </td>

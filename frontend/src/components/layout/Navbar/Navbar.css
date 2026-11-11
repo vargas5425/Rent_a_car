@@ -3,11 +3,19 @@
   top: 0;
   left: 0;
   right: 0;
-  background: rgba(255, 255, 255, 0.95);
+  background: var(--rc-bg) !important; /* 👈 Usar variable */
   backdrop-filter: blur(10px);
   z-index: 1000;
   padding: 20px 0;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  border-bottom: 1px solid var(--rc-border) !important;
+  transition: background-color 0.3s, border-color 0.3s;
+}
+
+/* Efecto de scroll del compañero */
+.rc-navbar--scrolled {
+  padding: 10px 0;
+  background: var(--rc-bg);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
 }
 
 .navbar-container {
@@ -19,17 +27,14 @@
   align-items: center;
 }
 
+/* Marca */
 .navbar-brand {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   font-weight: 800;
   font-size: 1.25rem;
-  color: var(--color-primary);
-}
-
-.brand-icon {
-  font-size: 1.5rem;
+  color: var(--rc-text);
 }
 
 .brand-logo {
@@ -39,127 +44,76 @@
   border-radius: 50%;
 }
 
+.brand-name {
+  color: var(--rc-text);
+}
+
+/* Enlaces */
 .navbar-links {
   display: flex;
   align-items: center;
-  gap: 32px;
+  gap: 24px;
 }
 
 .nav-link-custom {
   font-size: 0.95rem;
-  font-weight: 500;
-  color: var(--color-text);
+  font-weight: 600;
+  color: var(--brand-accent);
   transition: color 0.2s;
 }
 
 .nav-link-custom:hover {
-  color: var(--color-text-light);
+  color: #2563eb;
 }
 
-.nav-icon-btn {
-  background: none;
-  border: none;
-  font-size: 1.25rem;
-  cursor: pointer;
-  padding: 4px;
-  transition: transform 0.2s;
-}
-
-.nav-icon-btn:hover {
-  transform: scale(1.1);
-}
-
-/* ===== Botones de autenticación ===== */
+/* Botones Login/Register */
 .auth-buttons {
   display: flex;
   align-items: center;
-  gap: 10px;
-}
-
-.btn-login {
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: var(--color-text);
-  padding: 9px 18px;
-  border-radius: 8px;
-  border: 1px solid rgba(0, 0, 0, 0.12);
-  transition: all 0.2s ease;
-  text-decoration: none;
-  white-space: nowrap;
-}
-
-.btn-login:hover {
-  background: rgba(0, 0, 0, 0.04);
-  border-color: rgba(0, 0, 0, 0.2);
-}
-
-.btn-register {
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: #ffffff;
-  background: var(--color-primary, #111);
-  padding: 9px 18px;
-  border-radius: 8px;
-  border: 1px solid transparent;
-  transition: all 0.2s ease;
-  text-decoration: none;
-  white-space: nowrap;
-}
-
-.btn-register:hover {
-  transform: translateY(-1px);
-  filter: brightness(1.15);
-}
-
-/* Botones de Autenticación */
-.auth-buttons {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  margin-left: 10px;
+  gap: 12px;
 }
 
 .btn-login {
   font-size: 0.95rem;
-  font-weight: 600;
-  color: #0a0a0a;
+  font-weight: 500;
+  color: var(--rc-text);
   background: transparent;
-  padding: 8px 16px;
-  border-radius: 8px;
-  transition: background 0.2s;
-}
-
-.btn-login:hover {
-  background: rgba(0, 0, 0, 0.05);
-}
-
-.btn-register {
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: #ffffff;
-  background: #0a0a0a;
   padding: 8px 20px;
   border-radius: 8px;
-  transition: transform 0.2s, box-shadow 0.2s;
+  border: 1px solid var(--rc-border);
+  transition: all 0.2s;
+}
+
+.btn-login:hover {
+  background: var(--rc-bg-alt);
+}
+
+.btn-register {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #ffffff;
+  background: var(--brand-primary);
+  padding: 8px 20px;
+  border-radius: 8px;
+  transition: all 0.2s;
 }
 
 .btn-register:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  background: #1e293b;
+  transform: translateY(-1px);
 }
 
-/* Menú de Usuario Logueado */
+/* Usuario Logueado */
 .user-menu {
   display: flex;
   align-items: center;
   gap: 16px;
-  margin-left: 10px;
 }
 
 .user-name {
   font-size: 0.95rem;
   font-weight: 600;
-  color: #0a0a0a;
+  color: var(--rc-text);
 }
 
 .btn-logout {
@@ -179,59 +133,58 @@
   color: #ffffff;
 }
 
-@media (max-width: 768px) {
-  .navbar-container {
-    padding: 0 20px;
-  }
-  .navbar-links {
-    gap: 16px;
-  }
-  .nav-link-custom {
-    display: none;
-  }
-
-  .auth-buttons {
-  display: flex;
+/* =========================================
+   El Switch de Modo Oscuro (Del compañero)
+   ========================================= */
+.rc-theme {
+  position: relative;
+  display: inline-flex;
   align-items: center;
-  gap: 12px;
+  padding: 3px;
+  border: 1px solid var(--rc-border);
+  border-radius: 999px;
+  background: var(--rc-bg-alt);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
 }
 
-.btn-login {
-  font-size: 0.95rem;
-  font-weight: 500;
-  color: #334155;
-  background: transparent;
-  padding: 8px 20px;
-  border-radius: 8px;
-  border: 1px solid #e2e8f0;
-  transition: all 0.2s;
+.rc-theme__opt {
+  position: relative;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.85rem;
+  border-radius: 999px;
+  transition: color 0.3s;
 }
 
-.btn-login:hover {
-  background: #f8fafc;
-  color: #0f172a;
+.rc-theme__thumb {
+  position: absolute;
+  z-index: 1;
+  top: 3px;
+  bottom: 3px;
+  left: 3px;
+  width: calc(50% - 3px);
+  border-radius: 999px;
+  background: var(--rc-accent);
+  transition: transform 0.35s cubic-bezier(0.3, 1.3, 0.5, 1);
 }
 
-.btn-register {
-  font-size: 0.95rem;
-  font-weight: 500;
-  color: #ffffff;
-  background: #0f172a;
-  padding: 8px 20px;
-  border-radius: 8px;
-  border: 1px solid #0f172a;
-  transition: all 0.2s;
-}
+.rc-theme__opt--work { color: #1a1a1a; }
+.rc-theme__opt--sleep { color: var(--rc-text); }
 
-.btn-register:hover {
-  background: #1e293b;
-  transform: translateY(-1px);
+[data-theme="dark"] .rc-theme__thumb { 
+  transform: translateX(100%); 
+  background: #7c8cff; 
 }
+[data-theme="dark"] .rc-theme__opt--work { color: var(--rc-text); }
+[data-theme="dark"] .rc-theme__opt--sleep { color: #ffffff; }
 
-/* Ocultar enlaces extra en móviles */
+/* Responsive */
 @media (max-width: 768px) {
-  .nav-link-custom {
-    display: none;
-  }
-}
+  .navbar-container { padding: 0 20px; }
+  .navbar-links { gap: 16px; }
+  .nav-link-custom { display: none; }
 }

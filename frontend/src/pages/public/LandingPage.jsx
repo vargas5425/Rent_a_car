@@ -7,7 +7,7 @@ import Footer from '../../components/layout/Footer/Footer';
 
 export default function LandingPage() {
   return (
-    <div className="bg-light">
+    <div style={{ backgroundColor: 'var(--rc-bg)', minHeight: '100vh' }}>
       <Navbar />
       <Hero />
       <Brands />

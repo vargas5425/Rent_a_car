@@ -50,15 +50,15 @@ export default function CitiesSection() {
                 }}
               ></div>
 
-              <div className="position-absolute bottom-0 start-0 p-4 w-100 d-flex justify-content-between align-items-end">
-                <h4 className="text-white fw-bold mb-0">{ciudad.nombre}</h4>
-                <button
-                  className="btn btn-warning rounded-circle d-flex align-items-center justify-content-center"
-                  style={{ width: '40px', height: '40px' }}
-                >
-                  ↗
-                </button>
-              </div>
+                <div className="position-absolute bottom-0 start-0 p-4 w-100 d-flex justify-content-between align-items-end">
+                  <h4 className="text-white fw-bold mb-0">{ciudad.nombre}</h4>
+                  <button
+                    className="btn btn-warning rounded-circle d-flex align-items-center justify-content-center"
+                    style={{ width: '40px', height: '40px' }}
+                  >
+                    <i className="fa fa-arrow-circle-right" aria-hidden="true"></i>
+                  </button>
+                </div>
             </div>
           </div>
         ))}
