@@ -8,7 +8,7 @@ const brands = [
   { name: 'Tesla', logo: 'https://cdn.jsdelivr.net/gh/vehiclespecs/brand-logos@v1.0.0/tesla-logo.svg' },
   { name: 'Audi', logo: 'https://cdn.jsdelivr.net/gh/vehiclespecs/brand-logos@v1.0.0/audi-logo.svg' },
   
-  // 👇 Nuevas marcas
+
   { name: 'BMW', logo: 'https://cdn.jsdelivr.net/gh/vehiclespecs/brand-logos@v1.0.0/bmw-logo.svg' },
   { name: 'Mercedes', logo: 'https://cdn.jsdelivr.net/gh/vehiclespecs/brand-logos@v1.0.0/mercedes-benz-logo.svg' },
   { name: 'Toyota', logo: 'https://cdn.worldvectorlogo.com/logos/toyota-1.svg' },

@@ -173,3 +173,65 @@ input.form-control:focus {
   border-color: var(--brand-accent) !important;
   box-shadow: 0 0 0 0.25rem rgba(59, 130, 246, 0.25) !important;
 }
+
+/* =========================================================
+   Dashboard Page
+   ========================================================= */
+.dashboard-page {
+  background-color: var(--rc-bg);
+  min-height: 100vh;
+  transition: background-color 0.3s;
+}
+
+.dashboard-container {
+  margin-top: 80px;
+}
+
+.dashboard-title {
+  color: var(--rc-text);
+}
+
+/* Cards del dashboard: heredan .card global, solo ajustamos altura */
+.dashboard-card {
+  height: 100%;
+}
+
+.dashboard-card-title {
+  color: var(--rc-text);
+}
+
+.dashboard-card-text {
+  font-size: 0.9rem;
+  color: var(--rc-muted);
+}
+
+/* Icono circular (emoji o imagen) — 50x50 redondeado */
+.dashboard-icon {
+  width: 50px;
+  height: 50px;
+  font-size: 24px;
+  flex-shrink: 0;
+  overflow: hidden;
+  background-color: var(--rc-bg-alt);
+  border: 1px solid var(--rc-border);
+}
+
+/* Variantes de color para el icono (opcional, reemplaza bg-primary/success/info) */
+.dashboard-icon--primary { background-color: rgba(59, 130, 246, 0.15); }
+.dashboard-icon--success { background-color: rgba(25, 135, 84, 0.15); }
+.dashboard-icon--info    { background-color: rgba(13, 202, 240, 0.15); }
+
+/* Imagen dentro del icono: se recorta en círculo y se centra */
+.dashboard-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  border-radius: 50%;
+  display: block;
+}
+
+.mb-3 {
+    margin-bottom: 1rem !important;
+    margin:auto
+}

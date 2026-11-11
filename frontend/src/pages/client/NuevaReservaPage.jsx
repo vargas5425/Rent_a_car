@@ -41,7 +41,7 @@ export default function NuevaReservaPage() {
     return () => { isMounted = false; };
   }, [id]);
 
-  // 👇 NUEVA LÓGICA: Detecta si el rango es menor a 24h y fuerza "Hora"
+  // NUEVA LÓGICA: Detecta si el rango es menor a 24h y fuerza "Hora"
   let esMenorADia = false;
   if (inicio && fin) {
     const horas = (new Date(fin) - new Date(inicio)) / (1000 * 60 * 60);
@@ -112,9 +112,18 @@ export default function NuevaReservaPage() {
                   style={{ height: '220px', objectFit: 'cover', borderTopLeftRadius: '16px', borderTopRightRadius: '16px' }}
                 />
                 <div className="card-body p-4">
-                  <h4 className="fw-bold mb-1" style={{ color: 'var(--rc-text)' }}>{vehiculo.marca} {vehiculo.modelo}</h4>
+                  <div className="d-flex justify-content-between align-items-start mb-1">
+                  <h5 className="fw-bold mb-1" style={{ color: 'var(--rc-text)' }}>{vehiculo.marca} {vehiculo.modelo}</h5>
+                    <span className="text-muted fw-semibold">{vehiculo.anio}</span>
+                  </div>
+                  
                   <p className="text-muted mb-3" style={{ fontSize: '0.9rem' }}>
-                    {vehiculo.anio} • {vehiculo.transmision} • {vehiculo.pasajeros} pasajeros
+                    <p className="mb-1" style={{ color: 'var(--rc-text)' }}>
+                      <i className="fa fa-check-square-o me-1" aria-hidden="true"></i> {vehiculo.transmision}
+                    </p>
+                    <p className="mb-1" style={{ color: 'var(--rc-text)' }}>
+                      <i className="fa fa-check-square-o me-1" aria-hidden="true"></i> {vehiculo.pasajeros} pasajeros
+                    </p>
                   </p>
                   <p className="mb-1" style={{ color: 'var(--rc-text)' }}>{formatearBs(vehiculo.precio_hora)} <span className="text-muted">por hora</span></p>
                   <p className="mb-0" style={{ color: 'var(--rc-text)' }}>{formatearBs(vehiculo.precio_dia)} <span className="text-muted">por día</span></p>
@@ -135,11 +144,11 @@ export default function NuevaReservaPage() {
                     style={{ backgroundColor: 'var(--rc-card)', color: 'var(--rc-text)', borderColor: 'var(--rc-border)' }}
                   >
                     <option value="HORA">Hora</option>
-                    {/* 👇 Deshabilitamos "Día" si es menor a 24h */}
+                    {/* Deshabilitamos "Día" si es menor a 24h */}
                     <option value="DIA" disabled={esMenorADia}>Día</option>
                   </select>
                   
-                  {/* 👇 Aviso visual */}
+                  {/* Aviso visual */}
                   {esMenorADia && (
                     <small className="text-danger mt-1 d-block fw-semibold">
                       Alquiler menor a 24 horas: se cobra por hora.
@@ -162,7 +171,7 @@ export default function NuevaReservaPage() {
                   <div className="col-md-6 mb-3">
                     <label className="form-label fw-semibold" style={{ color: 'var(--rc-text)' }}>Devolución</label>
                     <input
-                      type="datetime-local"
+                      type="date"
                       className="form-control"
                       value={fin}
                       min={inicio || minFecha}

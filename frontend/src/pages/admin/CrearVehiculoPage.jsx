@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import api from '../../services/api';
-import { obtenerUrlImagen } from '../../utils/imagenes'; // 👈 Importado
+import { obtenerUrlImagen } from '../../utils/imagenes';
 import Navbar from '../../components/layout/Navbar/Navbar';
 
 export default function CrearVehiculoPage() {
@@ -18,6 +18,20 @@ export default function CrearVehiculoPage() {
   const [error, setError] = useState('');
   const [cargando, setCargando] = useState(esEdicion);
   const [subiendoImagen, setSubiendoImagen] = useState(false);
+  const [categorias, setCategorias] = useState([]);
+
+  // Cargar categorías al montar el componente
+  useEffect(() => {
+    const cargarCategorias = async () => {
+      try {
+        const res = await api.get('/categorias');
+        setCategorias(res.data);
+      } catch (err) {
+        console.error('Error al cargar categorías', err);
+      }
+    };
+    cargarCategorias();
+  }, []);
 
   useEffect(() => {
     if (!esEdicion) return;
@@ -122,9 +136,21 @@ export default function CrearVehiculoPage() {
             </div>
 
             <div className="row">
+              {/* SELECTOR DE CATEGORÍA */}
               <div className="col-md-6 mb-3">
-                <label className="form-label" style={{ color: 'var(--rc-text)' }}>Categoría ID</label>
-                <input type="number" name="categoria_id" className="form-control" value={formData.categoria_id} onChange={handleChange} required />
+                <label className="form-label" style={{ color: 'var(--rc-text)' }}>Categoría</label>
+                <select 
+                  name="categoria_id" 
+                  className="form-select" 
+                  value={formData.categoria_id} 
+                  onChange={handleChange}
+                  required
+                >
+                  <option value="">Seleccione una categoría</option>
+                  {categorias.map(cat => (
+                    <option key={cat.id} value={cat.id}>{cat.nombre}</option>
+                  ))}
+                </select>
               </div>
               <div className="col-md-6 mb-3">
                 <label className="form-label" style={{ color: 'var(--rc-text)' }}>Pasajeros</label>
@@ -173,7 +199,7 @@ export default function CrearVehiculoPage() {
               
               {formData.imagen_url && (
                 <img 
-                  src={obtenerUrlImagen(formData.imagen_url)} // 👈 Usando la función
+                  src={obtenerUrlImagen(formData.imagen_url)}
                   alt="Vista previa" 
                   className="mt-3 rounded" 
                   style={{ height: '100px', objectFit: 'cover' }} 

@@ -4,9 +4,10 @@ import dotenv from 'dotenv';
 import { sequelize } from './infrastructure/models/index.js';
 import authRoutes from './presentation/routes/authRoutes.js'; 
 import vehiculoRoutes from './presentation/routes/vehiculoRoutes.js';
-import reservaRoutes from './presentation/routes/reservaRoutes.js'; // 👈 Importar
-import path from 'path';          // 👈 Importar path
-import { fileURLToPath } from 'url'; // 👈 Importar fileURLToPath
+import reservaRoutes from './presentation/routes/reservaRoutes.js';
+import path from 'path';        
+import { fileURLToPath } from 'url';
+import categoriaRoutes from './presentation/routes/categoriaRoutes.js';
 
 // Como usamos ES Modules, necesitamos esto para obtener la ruta actual
 const __filename = fileURLToPath(import.meta.url);
@@ -24,7 +25,8 @@ app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 // Rutas
 app.use('/api/auth', authRoutes);
 app.use('/api/vehiculos', vehiculoRoutes);
-app.use('/api/reservas', reservaRoutes); // 👈 Montar
+app.use('/api/reservas', reservaRoutes);
+app.use('/api/categorias', categoriaRoutes);
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'Rent a Car API funcionando' });

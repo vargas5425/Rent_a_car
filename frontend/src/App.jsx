@@ -7,8 +7,6 @@ import DashboardPage from './pages/admin/DashboardPage';
 import CrearVehiculoPage from './pages/admin/CrearVehiculoPage';
 import AdminVehiculosPage from './pages/admin/AdminVehiculosPage';
 import GestionReservasPage from './pages/admin/GestionReservasPage'; 
-
-// 👇 Asegúrate de que estas importaciones apunten a las rutas correctas de tus archivos
 import NuevaReservaPage from './pages/client/NuevaReservaPage'; 
 import MisReservasPage from './pages/client/MisReservasPage'; 
 import DetalleReservaPage from './pages/client/DetalleReservaPage'; 
@@ -25,7 +23,7 @@ function App() {
       {/* Rutas de Cliente */}
       <Route path="/vehiculos" element={<ProtectedRoute><VehiculosPage /></ProtectedRoute>} />
       
-      {/* 👇 RUTA QUE FALTABA: Formulario de reserva */}
+      {/* RUTA: Formulario de reserva */}
       <Route path="/vehiculos/:id/reservar" element={<ProtectedRoute><NuevaReservaPage /></ProtectedRoute>} />
       
       <Route path="/mis-reservas" element={<ProtectedRoute><MisReservasPage /></ProtectedRoute>} />
