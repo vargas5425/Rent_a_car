@@ -20,6 +20,17 @@ class TarifaRepository {
   async listar() {
     return await TarifaModel.findAll();
   }
+    async actualizar(id, datos) {
+    const tarifa = await TarifaModel.findByPk(id);
+    if (!tarifa) throw new Error('Tarifa no encontrada');
+    return await tarifa.update(datos);
+  }
+
+  async eliminar(id) {
+    const tarifa = await TarifaModel.findByPk(id);
+    if (!tarifa) throw new Error('Tarifa no encontrada');
+    return await tarifa.destroy();
+  }
 }
 
 export default new TarifaRepository();

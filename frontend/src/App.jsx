@@ -7,6 +7,7 @@ import DashboardPage from './pages/admin/DashboardPage';
 import CrearVehiculoPage from './pages/admin/CrearVehiculoPage';
 import ProtectedRoute from './components/layout/ProtectedRoute'; 
 import AdminVehiculosPage from './pages/admin/AdminVehiculosPage';
+import AdminTarifasPage from './pages/admin/AdminTarifasPage';
 
 function App() {
   return (
@@ -14,6 +15,14 @@ function App() {
       <Route path="/" element={<LandingPage />} />
       <Route path="/login" element={<LoginPage />} />      
       <Route path="/register" element={<RegisterPage />} /> 
+     <Route 
+  path="/admin/tarifas" 
+  element={
+    <ProtectedRoute allowedRoles={['ADMINISTRADOR']}>
+      <AdminTarifasPage />
+    </ProtectedRoute>
+  } 
+/>
       
       {/* Ruta protegida para ver vehículos (Cualquier usuario logueado) */}
       <Route 

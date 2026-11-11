@@ -34,3 +34,20 @@ export async function calcularPrecio(req, res) {
     res.status(400).json({ error: error.message });
   }
 }
+export async function actualizarTarifa(req, res) {
+  try {
+    const tarifaActualizada = await TarifaRepository.actualizar(req.params.id, req.body);
+    res.json(tarifaActualizada);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+}
+
+export async function eliminarTarifa(req, res) {
+  try {
+    await TarifaRepository.eliminar(req.params.id);
+    res.json({ mensaje: 'Tarifa eliminada correctamente' });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+}
