@@ -5,6 +5,12 @@ import { sequelize } from './infrastructure/models/index.js';
 import authRoutes from './presentation/routes/authRoutes.js'; 
 import vehiculoRoutes from './presentation/routes/vehiculoRoutes.js';
 import reservaRoutes from './presentation/routes/reservaRoutes.js'; // 👈 Importar
+import path from 'path';          // 👈 Importar path
+import { fileURLToPath } from 'url'; // 👈 Importar fileURLToPath
+
+// Como usamos ES Modules, necesitamos esto para obtener la ruta actual
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 dotenv.config();
 
@@ -13,6 +19,7 @@ const PORT = process.env.PORT || 4000;
 
 app.use(cors({ origin: process.env.CORS_ORIGIN || 'http://localhost:5173' }));
 app.use(express.json());
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // Rutas
 app.use('/api/auth', authRoutes);

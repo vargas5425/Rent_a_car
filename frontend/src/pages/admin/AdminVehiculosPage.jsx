@@ -97,10 +97,10 @@ export default function AdminVehiculosPage() {
                       </span>
                     </td>
                     <td className="text-center">
-                      <button 
-                        className="btn btn-sm btn-outline-danger" 
-                        onClick={() => handleEliminar(auto.id)}
-                      >
+                      <Link to={`/dashboard/admin/vehiculos/${auto.id}/editar`} className="btn btn-sm btn-outline-dark me-2">
+                        Editar
+                      </Link>
+                      <button className="btn btn-sm btn-outline-danger" onClick={() => handleEliminar(auto.id)}>
                         Eliminar
                       </button>
                     </td>

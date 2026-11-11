@@ -66,7 +66,8 @@ export function construirGestionReservas({ reservaRepo, vehiculoRepo }) {
       const reserva = await cargarReservaVisible(id, usuario);
 
       const nuevoEstado = cancelar(reserva.estado);
-      return await reservaRepo.actualizarEstado(reserva.id, nuevoEstado);
+      const reservaCancelada = await reservaRepo.actualizarEstado(reserva.id, nuevoEstado);
+      return reservaCancelada;
     },
 
     // Vehículos que se pueden reservar en [fechaInicio, fechaFin).

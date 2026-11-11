@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../../services/api';
 import { buscarDisponibles } from '../../services/reservasService';
-import { aInputFecha, formatearBs, validarBusqueda } from '../../utils/reservas';
+import { validarBusqueda, aInputFecha, formatearBs } from '../../utils/reservas'; // 👈 Agregados
+import { obtenerUrlImagen } from '../../utils/imagenes'; // 👈 Importado
 import Navbar from '../../components/layout/Navbar/Navbar';
 import Footer from '../../components/layout/Footer/Footer';
 
@@ -141,7 +142,7 @@ export default function VehiculosPage() {
               <div className="card h-100">
                 <div className="position-relative">
                   <img
-                    src={auto.imagen_url || 'https://via.placeholder.com/300x200?text=Auto'}
+                    src={obtenerUrlImagen(auto.imagen_url)} // 👈 Aquí usamos la función
                     className="card-img-top"
                     alt={auto.modelo}
                     style={{ height: '220px', objectFit: 'cover', borderTopLeftRadius: '16px', borderTopRightRadius: '16px' }}

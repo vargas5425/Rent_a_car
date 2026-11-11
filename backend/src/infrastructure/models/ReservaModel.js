@@ -3,16 +3,8 @@ import sequelize from '../database/sequelize.js';
 
 const ReservaModel = sequelize.define('Reserva', {
   id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
-  usuario_id: {
-    type: DataTypes.INTEGER,
-    allowNull: false,
-    references: { model: 'usuarios', key: 'id' }
-  },
-  vehiculo_id: {
-    type: DataTypes.INTEGER,
-    allowNull: false,
-    references: { model: 'vehiculos', key: 'id' }
-  },
+  usuario_id: { type: DataTypes.INTEGER, allowNull: false },
+  vehiculo_id: { type: DataTypes.INTEGER, allowNull: false },
   fecha_inicio: { type: DataTypes.DATE, allowNull: false },
   fecha_fin: { type: DataTypes.DATE, allowNull: false },
   modalidad: { type: DataTypes.ENUM('HORA', 'DIA', 'SEMANA', 'MES'), allowNull: false },
@@ -23,6 +15,9 @@ const ReservaModel = sequelize.define('Reserva', {
     allowNull: false,
     defaultValue: 'RESERVADA'
   }
-}, { tableName: 'reservas', timestamps: true });
+}, { 
+  tableName: 'reservas', 
+  timestamps: true 
+});
 
 export default ReservaModel;

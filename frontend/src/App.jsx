@@ -37,6 +37,9 @@ function App() {
       
       {/* Rutas solo Admin */}
       <Route path="/vehiculos/crear" element={<ProtectedRoute allowedRoles={['ADMINISTRADOR']}><CrearVehiculoPage /></ProtectedRoute>} />
+      <Route path="/dashboard/admin/vehiculos/:id/editar" 
+        element={<ProtectedRoute allowedRoles={['ADMINISTRADOR']}><CrearVehiculoPage /></ProtectedRoute>} 
+      />
       <Route path="/dashboard/admin/vehiculos" element={<ProtectedRoute allowedRoles={['ADMINISTRADOR']}><AdminVehiculosPage /></ProtectedRoute>} />
     </Routes>
   );

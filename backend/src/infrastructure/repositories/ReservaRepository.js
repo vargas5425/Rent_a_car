@@ -64,15 +64,21 @@ class ReservaRepository {
   async actualizarEstado(id, estado) {
     const reserva = await ReservaModel.findByPk(id);
     if (!reserva) return null;
+    
+    // 1. Actualizamos la reserva
     await reserva.update({ estado });
+    
+    // 2. Si se cancela, el vehículo vuelve a estar DISPONIBLE
+    if (estado === 'CANCELADA') {
+      await VehiculoModel.update(
+        { estado: 'DISPONIBLE' },
+        { where: { id: reserva.vehiculo_id } }
+      );
+    }
+    
     return await this.findById(id);
   }
 
-  // Cambia el estado SOLO si el intervalo de esta reserva sigue libre; si otra reserva vigente
-  // ya lo ocupa, no cambia nada y devuelve null. Es la "revalidación" antes de confirmar:
-  // misma transacción y mismo bloqueo del vehículo que crearSiDisponible, para que una
-  // confirmación no se cruce con otra operación sobre el mismo auto.
-  // La propia reserva se excluye de la comparación (id distinto), si no chocaría consigo misma.
   async actualizarEstadoSiLibre(id, estado) {
     const hecho = await sequelize.transaction(async (t) => {
       const reserva = await ReservaModel.findByPk(id, { transaction: t });

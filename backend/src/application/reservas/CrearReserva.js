@@ -43,6 +43,8 @@ export function construirCrearReserva({ reservaRepo, vehiculoRepo }) {
     if (!reserva) {
       throw errorConflicto('El vehículo ya está reservado en ese horario');
     }
+
+    await vehiculoRepo.update(vehiculo.id, { estado: 'RESERVADA' });
     return reserva;
   };
 }

@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import api from '../../services/api';
 import { crearReserva } from '../../services/reservasService';
 import { aInputFecha, calcularTotal, formatearBs } from '../../utils/reservas';
+import { obtenerUrlImagen } from '../../utils/imagenes'; // 👈 Importado
 import Navbar from '../../components/layout/Navbar/Navbar';
 import Footer from '../../components/layout/Footer/Footer';
 
@@ -39,6 +40,21 @@ export default function NuevaReservaPage() {
     cargarVehiculo();
     return () => { isMounted = false; };
   }, [id]);
+
+  // 👇 NUEVA LÓGICA: Detecta si el rango es menor a 24h y fuerza "Hora"
+  let esMenorADia = false;
+  if (inicio && fin) {
+    const horas = (new Date(fin) - new Date(inicio)) / (1000 * 60 * 60);
+    if (horas > 0 && horas < 24) {
+      esMenorADia = true;
+    }
+  }
+
+  useEffect(() => {
+    if (esMenorADia && modalidad !== 'HORA') {
+      setModalidad('HORA');
+    }
+  }, [esMenorADia, modalidad]);
 
   const precioUnitario = vehiculo ? (modalidad === 'DIA' ? vehiculo.precio_dia : vehiculo.precio_hora) : 0;
   const resumen = calcularTotal({ fechaInicio: inicio, fechaFin: fin, modalidad, precioUnitario });
@@ -91,7 +107,7 @@ export default function NuevaReservaPage() {
             <div className="col-md-5">
               <div className="card h-100">
                 <img
-                  src={vehiculo.imagen_url || 'https://via.placeholder.com/300x200?text=Auto'}
+                  src={obtenerUrlImagen(vehiculo.imagen_url)} // 👈 Usando la función
                   alt={vehiculo.modelo}
                   style={{ height: '220px', objectFit: 'cover', borderTopLeftRadius: '16px', borderTopRightRadius: '16px' }}
                 />
@@ -119,8 +135,16 @@ export default function NuevaReservaPage() {
                     style={{ backgroundColor: 'var(--rc-card)', color: 'var(--rc-text)', borderColor: 'var(--rc-border)' }}
                   >
                     <option value="HORA">Hora</option>
-                    <option value="DIA">Día</option>
+                    {/* 👇 Deshabilitamos "Día" si es menor a 24h */}
+                    <option value="DIA" disabled={esMenorADia}>Día</option>
                   </select>
+                  
+                  {/* 👇 Aviso visual */}
+                  {esMenorADia && (
+                    <small className="text-danger mt-1 d-block fw-semibold">
+                      Alquiler menor a 24 horas: se cobra por hora.
+                    </small>
+                  )}
                 </div>
 
                 <div className="row">
