@@ -7,19 +7,16 @@ import { obtenerUrlImagen } from '../../utils/imagenes';
 import Navbar from '../../components/layout/Navbar/Navbar';
 import Footer from '../../components/layout/Footer/Footer';
 
-// Función auxiliar para obtener la fecha en formato YYYY-MM-DD respetando la zona horaria local
 const getLocalDateString = (date) => {
   const offset = date.getTimezoneOffset();
   const localDate = new Date(date.getTime() - (offset * 60 * 1000));
   return localDate.toISOString().split('T')[0];
 };
 
-// Función para generar fecha y hora por defecto (Hoy o Mañana a las 12:00)
 const generarFechaHoraDefault = (diasExtra = 0) => {
   const fecha = new Date();
   fecha.setDate(fecha.getDate() + diasExtra);
-  fecha.setHours(12, 0, 0, 0); // Establecer a las 12:00 PM
-  
+  fecha.setHours(12, 0, 0, 0);
   const fechaStr = getLocalDateString(fecha);
   return `${fechaStr}T12:00`;
 };
@@ -29,7 +26,6 @@ export default function VehiculosPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  // Inicializamos los estados con valores por defecto (Hoy y Mañana a las 12:00)
   const [inicio, setInicio] = useState(() => generarFechaHoraDefault(0));
   const [fin, setFin] = useState(() => generarFechaHoraDefault(1));
   
@@ -54,15 +50,12 @@ export default function VehiculosPage() {
     return () => { isMounted = false; };
   }, []);
 
-  // Función para actualizar la fecha y hora combinadas en el estado
   const actualizarFechaHora = (fecha, hora, tipo) => {
     const setter = tipo === 'inicio' ? setInicio : setFin;
-    
     if (!fecha) {
       setter('');
       return;
     }
-
     const horaFinal = hora || '12:00'; 
     setter(`${fecha}T${horaFinal}`);
   };
@@ -70,13 +63,11 @@ export default function VehiculosPage() {
   const handleBuscar = async (e) => {
     e.preventDefault();
     setErrorBusqueda('');
-
     const mensaje = validarBusqueda({ inicio, fin });
     if (mensaje) {
       setErrorBusqueda(mensaje);
       return;
     }
-
     setBuscando(true);
     try {
       const resultado = await buscarDisponibles(new Date(inicio).toISOString(), new Date(fin).toISOString());
@@ -105,40 +96,27 @@ export default function VehiculosPage() {
       ? `/vehiculos/${id}/reservar?inicio=${encodeURIComponent(busqueda.inicio)}&fin=${encodeURIComponent(busqueda.fin)}`
       : `/vehiculos/${id}/reservar`;
 
-  // Extraemos las partes de la fecha y hora para los inputs
   const inicioFecha = inicio ? inicio.split('T')[0] : '';
   const inicioHora = inicio ? inicio.split('T')[1] : '';
   const finFecha = fin ? fin.split('T')[0] : '';
   const finHora = fin ? fin.split('T')[1] : '';
 
-  // Estilos para unir visualmente los inputs de fecha y hora
-  const inputStyle = {
-    borderRight: 'none',
-    borderTopRightRadius: '0',
-    borderBottomRightRadius: '0',
-    minWidth: '130px'
-  };
-  
-  const inputTimeStyle = {
-    borderTopLeftRadius: '0',
-    borderBottomLeftRadius: '0',
-    width: '115px', // Ancho aumentado para evitar que se corte el texto
-    flex: 'none',
-    paddingLeft: '10px',
-    paddingRight: '5px'
+  const inputStyle = { borderRight: 'none', borderTopRightRadius: '0', borderBottomRightRadius: '0', minWidth: '130px' };
+  const inputTimeStyle = { borderTopLeftRadius: '0', borderBottomLeftRadius: '0', width: '115px', flex: 'none', paddingLeft: '10px', paddingRight: '5px' };
+
+  // 👇 Función para extraer el precio de la lista de tarifas
+  const obtenerPrecio = (vehiculo, modalidad) => {
+    if (!vehiculo || !vehiculo.tarifas) return null;
+    const tarifa = vehiculo.tarifas.find(t => t.modalidad === modalidad);
+    return tarifa ? Number(tarifa.precio) : null;
   };
 
   return (
     <div className="d-flex flex-column min-vh-100" style={{ backgroundColor: 'var(--rc-bg)' }}>
       
-      {/* ESTILOS PARA FORZAR QUE LA HORA SE VEA COMPLETA Y QUITAR EL ICONO */}
       <style>{`
-        input[type="time"]::-webkit-calendar-picker-indicator {
-          display: none; /* Oculta el icono del reloj que quita espacio */
-        }
-        input[type="time"] {
-          text-align: center; /* Centra el texto de la hora */
-        }
+        input[type="time"]::-webkit-calendar-picker-indicator { display: none; }
+        input[type="time"] { text-align: center; }
       `}</style>
 
       <Navbar />
@@ -149,79 +127,30 @@ export default function VehiculosPage() {
           <p className="text-muted">Elige el vehículo perfecto para tu próximo viaje.</p>
         </div>
 
-        {/* Buscador por fechas */}
         <form onSubmit={handleBuscar} noValidate className="card p-4 mb-5">
           <div className="row g-3 justify-content-center align-items-end">
-            
-            {/* RECOGIDA */}
             <div className="col-md-4 col-lg-4">
-              <label className="form-label fw-semibold" style={{ color: 'var(--rc-text)' }}>
-                Fecha y hora de recogida
-              </label>
+              <label className="form-label fw-semibold" style={{ color: 'var(--rc-text)' }}>Fecha y hora de recogida</label>
               <div className="input-group flex-nowrap">
-                <input
-                  type="date"
-                  className="form-control"
-                  value={inicioFecha}
-                  min={minFecha}
-                  onChange={(e) => actualizarFechaHora(e.target.value, inicioHora, 'inicio')}
-                  style={inputStyle}
-                  required
-                />
-                <input
-                  type="time"
-                  className="form-control"
-                  value={inicioHora}
-                  onChange={(e) => actualizarFechaHora(inicioFecha, e.target.value, 'inicio')}
-                  style={inputTimeStyle}
-                  required
-                />
+                <input type="date" className="form-control" value={inicioFecha} min={minFecha} onChange={(e) => actualizarFechaHora(e.target.value, inicioHora, 'inicio')} style={inputStyle} required />
+                <input type="time" className="form-control" value={inicioHora} onChange={(e) => actualizarFechaHora(inicioFecha, e.target.value, 'inicio')} style={inputTimeStyle} required />
               </div>
             </div>
 
-            {/* DEVOLUCIÓN */}
             <div className="col-md-4 col-lg-4">
-              <label className="form-label fw-semibold" style={{ color: 'var(--rc-text)' }}>
-                Fecha y hora de devolución
-              </label>
+              <label className="form-label fw-semibold" style={{ color: 'var(--rc-text)' }}>Fecha y hora de devolución</label>
               <div className="input-group flex-nowrap">
-                <input
-                  type="date"
-                  className="form-control"
-                  value={finFecha}
-                  min={inicioFecha || minFecha}
-                  onChange={(e) => actualizarFechaHora(e.target.value, finHora, 'fin')}
-                  style={inputStyle}
-                  required
-                />
-                <input
-                  type="time"
-                  className="form-control"
-                  value={finHora}
-                  onChange={(e) => actualizarFechaHora(finFecha, e.target.value, 'fin')}
-                  style={inputTimeStyle}
-                  required
-                />
+                <input type="date" className="form-control" value={finFecha} min={inicioFecha || minFecha} onChange={(e) => actualizarFechaHora(e.target.value, finHora, 'fin')} style={inputStyle} required />
+                <input type="time" className="form-control" value={finHora} onChange={(e) => actualizarFechaHora(finFecha, e.target.value, 'fin')} style={inputTimeStyle} required />
               </div>
             </div>
 
-            {/* BOTONES */}
             <div className="col-md-4 col-lg-3 d-flex gap-2">
-              <button 
-                type="submit" 
-                className="btn btn-warning flex-grow-1 fw-bold" 
-                disabled={buscando} 
-                style={{ color: '#000', borderRadius: '8px' }}
-              >
+              <button type="submit" className="btn btn-warning flex-grow-1 fw-bold" disabled={buscando} style={{ color: '#000', borderRadius: '8px' }}>
                 {buscando ? 'Buscando...' : 'Buscar'}
               </button>
               {busqueda && (
-                <button 
-                  type="button" 
-                  className="btn btn-outline-secondary" 
-                  onClick={handleLimpiar} 
-                  style={{ borderRadius: '8px' }}
-                >
+                <button type="button" className="btn btn-outline-secondary" onClick={handleLimpiar} style={{ borderRadius: '8px' }}>
                   Limpiar
                 </button>
               )}
@@ -273,6 +202,20 @@ export default function VehiculosPage() {
                   <div className="d-flex justify-content-between align-items-start mb-1">
                     <h5 className="fw-bold mb-0" style={{ color: 'var(--rc-text)' }}>{auto.marca} {auto.modelo}</h5>
                     <span className="text-muted fw-semibold">{auto.anio}</span>
+                  </div>
+
+                  {/* 👇 MOSTRAR PRECIOS DESDE TARIFAS */}
+                  <div className="d-flex flex-column gap-1 mb-4 mt-2">
+                    {obtenerPrecio(auto, 'HORA') && (
+                      <span className="fw-semibold" style={{ fontSize: '0.9rem', color: 'var(--rc-text)' }}>
+                        {formatearBs(obtenerPrecio(auto, 'HORA'))} / hora
+                      </span>
+                    )}
+                    {obtenerPrecio(auto, 'DIA') && (
+                      <span className="fw-semibold" style={{ fontSize: '0.9rem', color: 'var(--rc-text)' }}>
+                        {formatearBs(obtenerPrecio(auto, 'DIA'))} / día
+                      </span>
+                    )}
                   </div>
 
                   {auto.estado === 'MANTENIMIENTO' ? (

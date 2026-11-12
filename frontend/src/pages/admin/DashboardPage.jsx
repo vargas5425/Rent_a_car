@@ -5,7 +5,6 @@ import user from '../../assets/images/user.jfif';
 import reserva from '../../assets/images/reserva.jfif';
 import vehiculo from '../../assets/images/vehi.jpg';
 
-
 export default function DashboardPage() {
   const { usuario } = useAuth();
   if (!usuario) return null;
@@ -13,9 +12,9 @@ export default function DashboardPage() {
   return (
     <div className="dashboard-page">
       <Navbar />
-      <div className="container py-5 dashboard-container">
+      <div className="container py-5 dashboard-container" style={{ marginTop: '80px' }}>
         <div className="mb-5">
-          <h1 className="fw-bold mb-1 dashboard-title">Dashboard</h1>
+          <h1 className="fw-bold mb-1 dashboard-title" style={{ color: 'var(--rc-text)' }}>Dashboard</h1>
           <p className="text-muted">
             Bienvenido, {usuario.nombre}. Aquí tienes un resumen de tu sistema.
           </p>
@@ -30,7 +29,7 @@ export default function DashboardPage() {
                     <img src={vehiculo} alt="vehiculos" />
                 </div>
               </div>
-              <h4 className="fw-bold mb-1 dashboard-card-title">Inventario</h4>
+              <h4 className="fw-bold mb-1 dashboard-card-title" style={{ color: 'var(--rc-text)' }}>Inventario</h4>
               <p className="mb-4 dashboard-card-text">
                 Gestiona los vehículos, añade autos nuevos y controla sus estados.
               </p>
@@ -48,7 +47,7 @@ export default function DashboardPage() {
                   <img src={reserva} alt="reservas" />
                 </div>
               </div>
-              <h4 className="fw-bold mb-1 dashboard-card-title">Reservas</h4>
+              <h4 className="fw-bold mb-1 dashboard-card-title" style={{ color: 'var(--rc-text)' }}>Reservas</h4>
               <p className="mb-4 dashboard-card-text">
                 Revisa las reservas de los clientes y gestiona las entregas.
               </p>
@@ -57,6 +56,26 @@ export default function DashboardPage() {
               </Link>
             </div>
           </div>
+
+          {/* Card: Tarifas (solo ADMINISTRADOR) */}
+          {usuario.rol === 'ADMINISTRADOR' && (
+            <div className="col-md-4">
+              <div className="card p-4 dashboard-card">
+                <div className="d-flex justify-content-between align-items-center mb-3">
+                  <div className="rounded-circle d-flex align-items-center justify-content-center dashboard-icon dashboard-icon--warning" style={{ backgroundColor: 'rgba(255, 193, 7, 0.1)', width: '50px', height: '50px', fontSize: '24px' }}>
+                    💰
+                  </div>
+                </div>
+                <h4 className="fw-bold mb-1 dashboard-card-title" style={{ color: 'var(--rc-text)' }}>Tarifas</h4>
+                <p className="mb-4 dashboard-card-text">
+                  Configura precios por categoría o vehículo específico.
+                </p>
+                <Link to="/admin/tarifas" className="btn btn-dark w-100 mt-auto">
+                  Gestionar Tarifas
+                </Link>
+              </div>
+            </div>
+          )}
 
           {/* Card: Usuarios (solo ADMINISTRADOR) */}
           {usuario.rol === 'ADMINISTRADOR' && (
@@ -67,7 +86,7 @@ export default function DashboardPage() {
                     <img src={user} alt="usuarios" />
                   </div>
                 </div>
-                <h4 className="fw-bold mb-1 dashboard-card-title">Usuarios</h4>
+                <h4 className="fw-bold mb-1 dashboard-card-title" style={{ color: 'var(--rc-text)' }}>Usuarios</h4>
                 <p className="mb-4 dashboard-card-text">
                   Administra a los clientes, empleados y configuraciones del sistema.
                 </p>

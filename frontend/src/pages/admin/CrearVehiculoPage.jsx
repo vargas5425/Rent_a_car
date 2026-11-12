@@ -9,10 +9,10 @@ export default function CrearVehiculoPage() {
   const navigate = useNavigate();
   const esEdicion = Boolean(id);
 
+  // 👇 Eliminamos precio_hora y precio_dia del estado inicial
   const [formData, setFormData] = useState({
     placa: '', marca: '', modelo: '', anio: 2024, 
     categoria_id: 1, transmision: 'MANUAL', pasajeros: 5, kilometraje_actual: 0,
-    precio_hora: 40, precio_dia: 300,
     estado: 'DISPONIBLE', imagen_url: ''
   });
   const [error, setError] = useState('');
@@ -158,16 +158,7 @@ export default function CrearVehiculoPage() {
               </div>
             </div>
 
-            <div className="row">
-              <div className="col-md-6 mb-3">
-                <label className="form-label" style={{ color: 'var(--rc-text)' }}>Precio por hora (Bs)</label>
-                <input type="number" min="1" step="0.01" name="precio_hora" className="form-control" value={formData.precio_hora} onChange={handleChange} required />
-              </div>
-              <div className="col-md-6 mb-3">
-                <label className="form-label" style={{ color: 'var(--rc-text)' }}>Precio por día (Bs)</label>
-                <input type="number" min="1" step="0.01" name="precio_dia" className="form-control" value={formData.precio_dia} onChange={handleChange} required />
-              </div>
-            </div>
+            {/* 👇 BLOQUE DE PRECIOS ELIMINADO */}
 
             <div className="row">
               <div className="col-md-6 mb-3">

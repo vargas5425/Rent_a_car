@@ -10,6 +10,7 @@ import GestionReservasPage from './pages/admin/GestionReservasPage';
 import NuevaReservaPage from './pages/client/NuevaReservaPage'; 
 import MisReservasPage from './pages/client/MisReservasPage'; 
 import DetalleReservaPage from './pages/client/DetalleReservaPage'; 
+import AdminTarifasPage from './pages/admin/AdminTarifasPage';
 
 import ProtectedRoute from './components/layout/ProtectedRoute'; 
 
@@ -39,6 +40,14 @@ function App() {
         element={<ProtectedRoute allowedRoles={['ADMINISTRADOR']}><CrearVehiculoPage /></ProtectedRoute>} 
       />
       <Route path="/dashboard/admin/vehiculos" element={<ProtectedRoute allowedRoles={['ADMINISTRADOR']}><AdminVehiculosPage /></ProtectedRoute>} />
+      <Route 
+        path="/admin/tarifas" 
+        element={
+          <ProtectedRoute allowedRoles={['ADMINISTRADOR']}>
+            <AdminTarifasPage />
+          </ProtectedRoute>
+        } 
+      />
     </Routes>
   );
 }

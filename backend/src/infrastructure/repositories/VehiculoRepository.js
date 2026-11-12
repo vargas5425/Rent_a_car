@@ -1,21 +1,18 @@
 import { Op } from 'sequelize';
-import { sequelize, VehiculoModel, CategoriaModel } from '../models/index.js';
+import { sequelize, VehiculoModel, CategoriaModel, TarifaModel } from '../models/index.js'; // 👈 Importamos TarifaModel
 import { ESTADOS_BLOQUEANTES } from '../../domain/reservas/Reserva.js';
 
 class VehiculoRepository {
   async findAll() {
-    // Trae todos los vehículos e incluye los datos de su categoría (JOIN)
     return await VehiculoModel.findAll({
       where: { activo: true },
-      include: [{ model: CategoriaModel, as: 'categoria' }]
+      include: [
+        { model: CategoriaModel, as: 'categoria' },
+        { model: TarifaModel, as: 'tarifas' } // 👈 Incluimos las tarifas
+      ]
     });
   }
 
-  // Vehículos que se pueden reservar en [inicio, fin): activos, fuera de MANTENIMIENTO y sin
-  // ninguna reserva bloqueante que choque con el intervalo.
-  // Es UNA sola consulta (NOT EXISTS) que aprovecha el índice reservas_vehiculo_intervalo,
-  // en vez de traer toda la flota y filtrar en Node.
-  // Los valores se pasan por sequelize.escape(), nunca concatenados a mano.
   async findDisponibles(inicio, fin) {
     const bloqueantes = ESTADOS_BLOQUEANTES.map((estado) => sequelize.escape(estado)).join(', ');
     const sinChoques = sequelize.literal(`NOT EXISTS (
@@ -32,13 +29,19 @@ class VehiculoRepository {
         estado: { [Op.ne]: 'MANTENIMIENTO' },
         [Op.and]: [sinChoques]
       },
-      include: [{ model: CategoriaModel, as: 'categoria' }]
+      include: [
+        { model: CategoriaModel, as: 'categoria' },
+        { model: TarifaModel, as: 'tarifas' } // 👈 Incluimos las tarifas
+      ]
     });
   }
 
   async findById(id) {
     return await VehiculoModel.findByPk(id, {
-      include: [{ model: CategoriaModel, as: 'categoria' }]
+      include: [
+        { model: CategoriaModel, as: 'categoria' },
+        { model: TarifaModel, as: 'tarifas' } // 👈 Incluimos las tarifas
+      ]
     });
   }
 
@@ -55,7 +58,6 @@ class VehiculoRepository {
   async delete(id) {
     const vehiculo = await VehiculoModel.findByPk(id);
     if (!vehiculo) return null;
-    // Borrado lógico (recomendado)
     return await vehiculo.update({ activo: false }); 
   }
 }
