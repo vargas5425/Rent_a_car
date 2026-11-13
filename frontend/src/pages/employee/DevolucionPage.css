@@ -1,0 +1,29 @@
+
+.devolucion-page {
+  max-width: 1000px;
+  min-height: 80vh;
+}
+
+.devolucion-page .card {
+  border-radius: 14px;
+}
+
+.devolucion-page .form-control {
+  padding: 11px 14px;
+  border-radius: 8px;
+}
+
+.devolucion-page .form-control:focus {
+  border-color: #86b7fe;
+  box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.12);
+}
+
+.devolucion-page .btn {
+  border-radius: 8px;
+}
+
+@media (max-width: 576px) {
+  .devolucion-page .card-body {
+    padding: 20px !important;
+  }
+}

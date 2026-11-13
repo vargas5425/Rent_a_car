@@ -8,6 +8,7 @@ import {
   getReserva,
   patchConfirmarReserva,
   patchCancelarReserva,
+  patchFinalizarReserva,
   getDisponibilidad
 } from '../controllers/ReservaController.js';
 
@@ -25,5 +26,14 @@ router.post('/', verifyToken, postReserva);
 router.get('/:id', verifyToken, getReserva);
 router.patch('/:id/confirmar', verifyToken, authorizeRole(STAFF), patchConfirmarReserva);
 router.patch('/:id/cancelar', verifyToken, patchCancelarReserva);
+
+// Finalizar administrativamente una reserva
+// Solo EMPLEADO y ADMINISTRADOR
+router.patch(
+  '/:id/finalizar',
+  verifyToken,
+  authorizeRole(STAFF),
+  patchFinalizarReserva
+);
 
 export default router;

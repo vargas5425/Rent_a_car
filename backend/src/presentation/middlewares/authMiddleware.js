@@ -22,3 +22,33 @@ export function verifyToken(req, res, next) {
     return res.status(403).json({ error: 'Token inválido o expirado' });
   }
 }
+
+/**
+ * Permite acceder únicamente a usuarios con roles autorizados.
+ * Debe utilizarse después de verifyToken.
+ *
+ * Ejemplo:
+ * authorizeRoles('EMPLEADO', 'ADMINISTRADOR')
+ */
+export function authorizeRoles(...rolesPermitidos) {
+  return (req, res, next) => {
+    // Verificar que el usuario esté autenticado
+    if (!req.usuario) {
+      return res.status(401).json({
+        error: 'Usuario no autenticado'
+      });
+    }
+
+    // Obtener el rol almacenado en el JWT
+    const rol = req.usuario.rol;
+
+    // Comprobar si el rol está autorizado
+    if (!rolesPermitidos.includes(rol)) {
+      return res.status(403).json({
+        error: 'No tienes permisos para realizar esta acción'
+      });
+    }
+
+    next();
+  };
+}

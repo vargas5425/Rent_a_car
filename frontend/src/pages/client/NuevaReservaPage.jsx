@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import api from '../../services/api';
 import { crearReserva } from '../../services/reservasService';
+import { obtenerMensajeError } from '../../utils/manejarErrores';
 import { aInputFecha, calcularTotal, formatearBs } from '../../utils/reservas';
 import { obtenerUrlImagen } from '../../utils/imagenes';
 import Navbar from '../../components/layout/Navbar/Navbar';
@@ -32,8 +33,12 @@ export default function NuevaReservaPage() {
         if (encontrado) setVehiculo(encontrado);
         else setErrorCarga('No encontramos ese vehículo.');
       } catch (err) {
-        if (isMounted) setErrorCarga(err.response?.data?.error || 'Error al cargar el vehículo.');
-      } finally {
+        if (isMounted) {
+          setErrorCarga(
+            obtenerMensajeError(err, 'No se pudo cargar la información del vehículo.')
+          );
+        }
+} finally {
         if (isMounted) setCargando(false);
       }
     };
@@ -59,6 +64,9 @@ export default function NuevaReservaPage() {
   };
 
   const precioUnitario = vehiculo ? obtenerPrecio(vehiculo, modalidad) : 0;
+  console.log('Modalidad seleccionada:', modalidad);
+  console.log('Tarifas del vehículo:', vehiculo?.tarifas);
+  console.log('Precio unitario:', precioUnitario);
   const resumen = calcularTotal({ fechaInicio: inicio, fechaFin: fin, modalidad, precioUnitario });
   const enElPasado = inicio && new Date(inicio).getTime() < Date.now();
 
@@ -66,8 +74,22 @@ export default function NuevaReservaPage() {
     e.preventDefault();
     setError('');
 
+    if (!inicio || !fin || new Date(fin) <= new Date(inicio)) {
+  setError('La devolución debe ser posterior a la recogida.');
+  return;
+    }
+
+    if (!Number.isFinite(precioUnitario) || precioUnitario <= 0) {
+      setError(
+        `Este vehículo no tiene una tarifa válida por ${
+          modalidad === 'HORA' ? 'hora' : 'día'
+        }. Configura la tarifa antes de reservar.`
+      );
+      return;
+    }
+
     if (!resumen) {
-      setError('Revisa las fechas: la devolución debe ser posterior a la recogida.');
+      setError('No se pudo calcular el total de la reserva.');
       return;
     }
     if (enElPasado) {
@@ -85,8 +107,10 @@ export default function NuevaReservaPage() {
       });
       navigate(`/reservas/${reserva.id}`);
     } catch (err) {
-      setError(err.response?.data?.error || 'No se pudo crear la reserva.');
-    } finally {
+    setError(
+      obtenerMensajeError(err, 'No se pudo crear la reserva.')
+    );
+  } finally {
       setEnviando(false);
     }
   };
@@ -176,7 +200,7 @@ export default function NuevaReservaPage() {
                   <div className="col-md-6 mb-3">
                     <label className="form-label fw-semibold" style={{ color: 'var(--rc-text)' }}>Devolución</label>
                     <input
-                      type="date"
+                      type="datetime-local"
                       className="form-control"
                       value={fin}
                       min={inicio || minFecha}
