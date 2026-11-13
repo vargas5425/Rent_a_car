@@ -37,3 +37,11 @@ export async function cancelarReserva(id) {
   const res = await api.patch(`/reservas/${id}/cancelar`);
   return res.data.reserva;
 }
+
+export async function crearAlquilerDesdeReserva(reservaId) {
+  const respuesta = await api.post('/alquileres', {
+    reservaId: Number(reservaId)
+  });
+
+  return respuesta.data.alquiler;
+}

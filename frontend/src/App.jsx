@@ -35,7 +35,9 @@ import AdminTarifasPage from './pages/admin/AdminTarifasPage';
 import AlquileresActivosPage from './pages/employee/AlquileresActivosPage.jsx';
 import CargosAdicionalesPage from './pages/employee/CargosAdicionalesPage.jsx';
 import DevolucionPage from './pages/employee/DevolucionPage.jsx';
+import EntregaPage from './pages/employee/EntregaPage.jsx';
 import HistorialAlquileresPage from './pages/employee/HistorialAlquileresPage.jsx';
+import AlquileresPendientesPage from './pages/employee/AlquileresPendientesPage.jsx';
 // ===================================
 // PROTECCIÓN DE RUTAS
 // ===================================
@@ -125,6 +127,18 @@ function App() {
         }
       />
       
+      
+      <Route
+        path="/dashboard/alquileres-pendientes"
+        element={
+          <ProtectedRoute
+            allowedRoles={['ADMINISTRADOR', 'EMPLEADO']}
+          >
+            <AlquileresPendientesPage />
+          </ProtectedRoute>
+        }
+      />
+
 
       <Route
         path="/dashboard/alquileres-historial"
@@ -136,6 +150,19 @@ function App() {
           </ProtectedRoute>
         }
       />
+
+
+      <Route
+        path="/dashboard/alquileres/:id/entrega"
+        element={
+          <ProtectedRoute
+            allowedRoles={['ADMINISTRADOR', 'EMPLEADO']}
+          >
+            <EntregaPage />
+          </ProtectedRoute>
+        }
+      />
+
 
       <Route
         path="/dashboard/alquileres/:id/devolucion"

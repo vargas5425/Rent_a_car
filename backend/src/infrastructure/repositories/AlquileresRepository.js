@@ -1,7 +1,10 @@
-
 import { Op } from 'sequelize';
-import { AlquilerModel } from '../models/index.js';
 
+import {
+  AlquilerModel,
+  UsuarioModel,
+  VehiculoModel
+} from '../models/index.js';
 class AlquileresRepository {
 
   // 1. Crear un alquiler
@@ -61,12 +64,33 @@ class AlquileresRepository {
   }
 
   // 6. Listar alquileres por estado
+  // 6. Listar alquileres por estado con información del cliente y vehículo
   async listarPorEstado(estado, options = {}) {
     const alquileres = await AlquilerModel.findAll({
       ...options,
+
       where: {
         estado
       },
+
+      include: [
+        {
+          model: UsuarioModel,
+          as: 'usuario',
+          attributes: ['id', 'nombre', 'email']
+        },
+        {
+          model: VehiculoModel,
+          as: 'vehiculo',
+          attributes: [
+            'id',
+            'marca',
+            'modelo',
+            'placa'
+          ]
+        }
+      ],
+
       order: [['fecha_inicio', 'DESC']]
     });
 

@@ -7,6 +7,7 @@ import AlquilerActivoController from '../controllers/AlquilerActivoController.js
 import DevolucionController from '../controllers/DevolucionController.js';
 import CrearAlquilerController from '../controllers/CrearAlquilerController.js';
 import HistorialAlquileresController from '../controllers/HistorialAlquileresController.js';
+import AlquilerPendienteController from '../controllers/AlquilerPendienteController.js';
 
 import {
   verifyToken,
@@ -31,6 +32,14 @@ router.get(
   (req, res) => AlquilerActivoController.listar(req, res)
 );
 
+
+// Obtener todos los alquileres pendientes de entrega
+router.get(
+  '/pendientes',
+  verifyToken,
+  authorizeRoles('EMPLEADO', 'ADMINISTRADOR'),
+  (req, res) => AlquilerPendienteController.listar(req, res)
+);
 
  // Obtener historial de alquileres finalizados
 router.get(
