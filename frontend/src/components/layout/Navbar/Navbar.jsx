@@ -43,7 +43,7 @@ export default function Navbar() {
                   <Link to="/vehiculos" className="nav-link-custom">
                     List Cars
                   </Link>
-                  {/* 👇 ENLACE AGREGADO PARA EL CLIENTE */}
+                  {/* ENLACE AGREGADO PARA EL CLIENTE */}
                   <Link to="/mis-reservas" className="nav-link-custom">
                     Mis Reservas
                   </Link>
@@ -53,7 +53,7 @@ export default function Navbar() {
                 <>
                   <Link to="/vehiculos" className="nav-link-custom">List Cars</Link>
                   <Link to="/dashboard" className="nav-link-custom">Dashboard</Link>
-                  {/* 👇 ENLACE AGREGADO PARA EL STAFF */}
+                  {/* ENLACE AGREGADO PARA EL STAFF */}
                   <Link to="/dashboard/reservas" className="nav-link-custom">Gestión Reservas</Link>
                 </>
               )}

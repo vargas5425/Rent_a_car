@@ -26,6 +26,7 @@ import DashboardPage from './pages/admin/DashboardPage';
 import CrearVehiculoPage from './pages/admin/CrearVehiculoPage';
 import AdminVehiculosPage from './pages/admin/AdminVehiculosPage';
 import GestionReservasPage from './pages/admin/GestionReservasPage';
+import AdminTarifasPage from './pages/admin/AdminTarifasPage';
 
 // ===================================
 // PÁGINAS DE EMPLEADOS
@@ -113,7 +114,6 @@ function App() {
         }
       />
 
-      {/* Alquileres activos */}
       <Route
         path="/dashboard/alquileres-activos"
         element={
@@ -150,6 +150,16 @@ function App() {
         element={
           <ProtectedRoute allowedRoles={['ADMINISTRADOR']}>
             <AdminVehiculosPage />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Administración de tarifas */}
+      <Route
+        path="/admin/tarifas"
+        element={
+          <ProtectedRoute allowedRoles={['ADMINISTRADOR']}>
+            <AdminTarifasPage />
           </ProtectedRoute>
         }
       />

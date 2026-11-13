@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import api from '../../services/api';
 import { crearReserva } from '../../services/reservasService';
 import { aInputFecha, calcularTotal, formatearBs } from '../../utils/reservas';
-import { obtenerUrlImagen } from '../../utils/imagenes'; // 👈 Importado
+import { obtenerUrlImagen } from '../../utils/imagenes';
 import Navbar from '../../components/layout/Navbar/Navbar';
 import Footer from '../../components/layout/Footer/Footer';
 
@@ -41,22 +41,24 @@ export default function NuevaReservaPage() {
     return () => { isMounted = false; };
   }, [id]);
 
-  // 👇 NUEVA LÓGICA: Detecta si el rango es menor a 24h y fuerza "Hora"
   let esMenorADia = false;
   if (inicio && fin) {
     const horas = (new Date(fin) - new Date(inicio)) / (1000 * 60 * 60);
-    if (horas > 0 && horas < 24) {
-      esMenorADia = true;
-    }
+    if (horas > 0 && horas < 24) esMenorADia = true;
   }
 
   useEffect(() => {
-    if (esMenorADia && modalidad !== 'HORA') {
-      setModalidad('HORA');
-    }
+    if (esMenorADia && modalidad !== 'HORA') setModalidad('HORA');
   }, [esMenorADia, modalidad]);
 
-  const precioUnitario = vehiculo ? (modalidad === 'DIA' ? vehiculo.precio_dia : vehiculo.precio_hora) : 0;
+  // 👇 Función auxiliar para extraer precios de las tarifas
+  const obtenerPrecio = (vehiculo, modalidad) => {
+    if (!vehiculo || !vehiculo.tarifas) return 0;
+    const tarifa = vehiculo.tarifas.find(t => t.modalidad === modalidad);
+    return tarifa ? Number(tarifa.precio) : 0;
+  };
+
+  const precioUnitario = vehiculo ? obtenerPrecio(vehiculo, modalidad) : 0;
   const resumen = calcularTotal({ fechaInicio: inicio, fechaFin: fin, modalidad, precioUnitario });
   const enElPasado = inicio && new Date(inicio).getTime() < Date.now();
 
@@ -107,17 +109,31 @@ export default function NuevaReservaPage() {
             <div className="col-md-5">
               <div className="card h-100">
                 <img
-                  src={obtenerUrlImagen(vehiculo.imagen_url)} // 👈 Usando la función
+                  src={obtenerUrlImagen(vehiculo.imagen_url)}
                   alt={vehiculo.modelo}
                   style={{ height: '220px', objectFit: 'cover', borderTopLeftRadius: '16px', borderTopRightRadius: '16px' }}
                 />
                 <div className="card-body p-4">
-                  <h4 className="fw-bold mb-1" style={{ color: 'var(--rc-text)' }}>{vehiculo.marca} {vehiculo.modelo}</h4>
-                  <p className="text-muted mb-3" style={{ fontSize: '0.9rem' }}>
-                    {vehiculo.anio} • {vehiculo.transmision} • {vehiculo.pasajeros} pasajeros
-                  </p>
-                  <p className="mb-1" style={{ color: 'var(--rc-text)' }}>{formatearBs(vehiculo.precio_hora)} <span className="text-muted">por hora</span></p>
-                  <p className="mb-0" style={{ color: 'var(--rc-text)' }}>{formatearBs(vehiculo.precio_dia)} <span className="text-muted">por día</span></p>
+                  <div className="d-flex justify-content-between align-items-start mb-1">
+                    <h5 className="fw-bold mb-1" style={{ color: 'var(--rc-text)' }}>{vehiculo.marca} {vehiculo.modelo}</h5>
+                    <span className="text-muted fw-semibold">{vehiculo.anio}</span>
+                  </div>
+                  
+                  <div className="text-muted mb-3" style={{ fontSize: '0.9rem' }}>
+                    <p className="mb-1" style={{ color: 'var(--rc-text)' }}>
+                      <i className="fa fa-check-square-o me-1" aria-hidden="true"></i> {vehiculo.transmision}
+                    </p>
+                    <p className="mb-1" style={{ color: 'var(--rc-text)' }}>
+                      <i className="fa fa-check-square-o me-1" aria-hidden="true"></i> {vehiculo.pasajeros} pasajeros
+                    </p>
+                  </div>
+                  {/* 👇 MOSTRAR PRECIOS DESDE TARIFAS */}
+                  {obtenerPrecio(vehiculo, 'HORA') > 0 && (
+                    <p className="mb-1" style={{ color: 'var(--rc-text)' }}>{formatearBs(obtenerPrecio(vehiculo, 'HORA'))} <span className="text-muted">por hora</span></p>
+                  )}
+                  {obtenerPrecio(vehiculo, 'DIA') > 0 && (
+                    <p className="mb-0" style={{ color: 'var(--rc-text)' }}>{formatearBs(obtenerPrecio(vehiculo, 'DIA'))} <span className="text-muted">por día</span></p>
+                  )}
                 </div>
               </div>
             </div>
@@ -135,11 +151,9 @@ export default function NuevaReservaPage() {
                     style={{ backgroundColor: 'var(--rc-card)', color: 'var(--rc-text)', borderColor: 'var(--rc-border)' }}
                   >
                     <option value="HORA">Hora</option>
-                    {/* 👇 Deshabilitamos "Día" si es menor a 24h */}
                     <option value="DIA" disabled={esMenorADia}>Día</option>
                   </select>
                   
-                  {/* 👇 Aviso visual */}
                   {esMenorADia && (
                     <small className="text-danger mt-1 d-block fw-semibold">
                       Alquiler menor a 24 horas: se cobra por hora.
@@ -162,7 +176,7 @@ export default function NuevaReservaPage() {
                   <div className="col-md-6 mb-3">
                     <label className="form-label fw-semibold" style={{ color: 'var(--rc-text)' }}>Devolución</label>
                     <input
-                      type="datetime-local"
+                      type="date"
                       className="form-control"
                       value={fin}
                       min={inicio || minFecha}

@@ -11,6 +11,7 @@ import CargoAdicionalModel from './CargoAdicionalModel.js';
 
 // Modelo del módulo de reservas
 import ReservaModel from './ReservaModel.js';
+import TarifaModel from './TarifaModel.js'; // 👈 Importamos Tarifa
 
 // ===================================
 // RELACIONES DE CATEGORÍAS Y VEHÍCULOS
@@ -92,6 +93,14 @@ CargoAdicionalModel.belongsTo(AlquilerModel, {
 // EXPORTACIÓN DE MODELOS
 // ===================================
 
+// 👇 Relaciones de Tarifas
+VehiculoModel.hasMany(TarifaModel, { foreignKey: 'vehiculo_id', as: 'tarifas' });
+TarifaModel.belongsTo(VehiculoModel, { foreignKey: 'vehiculo_id', as: 'vehiculo' });
+
+CategoriaModel.hasMany(TarifaModel, { foreignKey: 'categoria_id', as: 'tarifas' });
+TarifaModel.belongsTo(CategoriaModel, { foreignKey: 'categoria_id', as: 'categoria' });
+
+
 export {
   sequelize,
   UsuarioModel,
@@ -99,5 +108,7 @@ export {
   VehiculoModel,
   ReservaModel,
   AlquilerModel,
-  CargoAdicionalModel
+  CargoAdicionalModel,
+  TarifaModel
 };
+

@@ -4,7 +4,8 @@ import { Op } from 'sequelize';
 import {
   sequelize,
   VehiculoModel,
-  CategoriaModel
+  CategoriaModel,
+  TarifaModel
 } from '../models/index.js';
 
 import {
@@ -21,7 +22,8 @@ class VehiculoRepository {
     return await VehiculoModel.findAll({
       where: { activo: true },
       include: [
-        { model: CategoriaModel, as: 'categoria' }
+        { model: CategoriaModel, as: 'categoria' },
+        { model: TarifaModel, as: 'tarifas' }
       ]
     });
   }
@@ -56,7 +58,8 @@ class VehiculoRepository {
         [Op.and]: [sinChoques]
       },
       include: [
-        { model: CategoriaModel, as: 'categoria' }
+        { model: CategoriaModel, as: 'categoria' },
+        { model: TarifaModel, as: 'tarifas' }
       ]
     });
   }
@@ -70,7 +73,8 @@ class VehiculoRepository {
     return await VehiculoModel.findByPk(id, {
       ...options,
       include: [
-        { model: CategoriaModel, as: 'categoria' }
+        { model: CategoriaModel, as: 'categoria' },
+        { model: TarifaModel, as: 'tarifas' }
       ]
     });
   }
@@ -102,7 +106,8 @@ class VehiculoRepository {
   }
 
   // ===================================
-  // 6. ELIMINAR VEHÍCULO (BORRADO LÓGICO)
+  // 6. ELIMINAR VEHÍCULO
+  // BORRADO LÓGICO
   // ===================================
 
   async delete(id) {
