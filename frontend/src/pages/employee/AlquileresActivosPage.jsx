@@ -25,7 +25,7 @@ function AlquileresActivosPage() {
       }
 
       const respuesta = await axios.get(
-        `${API_URL}/api/alquileres/activos`,
+        `${API_URL}/alquileres/activos`,
         {
           headers: {
             Authorization: `Bearer ${token}`
