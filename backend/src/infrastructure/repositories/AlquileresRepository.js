@@ -73,6 +73,23 @@ class AlquileresRepository {
     return alquileres.map(alquiler => alquiler.toJSON());
   }
 
+
+  async existeOtroAlquilerActivo(vehiculoId, alquilerId, options = {}) {
+    const cantidad = await AlquilerModel.count({
+      where: {
+        vehiculo_id: vehiculoId,
+        estado: 'ACTIVO',
+        id: {
+          [Op.ne]: alquilerId
+        }
+      },
+      transaction: options.transaction
+    });
+
+    return cantidad > 0;
+  }
+
+
   // 7. Actualizar datos de un alquiler
   async actualizar(id, datos, options = {}) {
     const alquiler = await AlquilerModel.findByPk(
@@ -108,18 +125,23 @@ class AlquileresRepository {
   }
 
   // 9. Registrar datos de devolución
-  async registrarDevolucion(id, datos, options = {}) {
-    const campos = {
-      fecha_devolucion: datos.fecha_devolucion,
-      kilometraje_final: datos.kilometraje_final,
-      combustible_final: datos.combustible_final,
-      estado: 'FINALIZADO'
-    };
+  
+async registrarDevolucion(id, datos, options = {}) {
+  const campos = {
+    fecha_devolucion: datos.fecha_devolucion,
+    kilometraje_final: datos.kilometraje_final,
+    combustible_final: datos.combustible_final,
+    observaciones_devolucion: datos.observaciones_devolucion,
+    estado: 'FINALIZADO'
+  };
 
-    return this.actualizar(id, campos, options);
-  }
+  return this.actualizar(id, campos, options);
+}
+
 
   // 10. Verificar conflictos de fechas
+  
+  // 10. Verificar conflictos de alquileres
   async existeSolapamiento(
     vehiculoId,
     fechaInicio,
@@ -129,17 +151,29 @@ class AlquileresRepository {
   ) {
     const where = {
       vehiculo_id: vehiculoId,
-      estado: {
-        [Op.in]: ['PENDIENTE', 'ACTIVO']
-      },
-      fecha_inicio: {
-        [Op.lt]: fechaFin
-      },
-      fecha_fin: {
-        [Op.gt]: fechaInicio
-      }
+
+      [Op.or]: [
+        // Un alquiler ACTIVO bloquea el vehículo
+        // hasta que se registre su devolución
+        {
+          estado: 'ACTIVO'
+        },
+
+        // Un alquiler PENDIENTE bloquea
+        // únicamente las fechas que se superponen
+        {
+          estado: 'PENDIENTE',
+          fecha_inicio: {
+            [Op.lt]: fechaFin
+          },
+          fecha_fin: {
+            [Op.gt]: fechaInicio
+          }
+        }
+      ]
     };
 
+    // Excluir un alquiler específico cuando corresponda
     if (excluirAlquilerId !== null) {
       where.id = {
         [Op.ne]: excluirAlquilerId
@@ -153,6 +187,6 @@ class AlquileresRepository {
 
     return cantidad > 0;
   }
-}
 
+}
 export default new AlquileresRepository();

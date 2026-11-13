@@ -33,7 +33,9 @@ import AdminTarifasPage from './pages/admin/AdminTarifasPage';
 // ===================================
 
 import AlquileresActivosPage from './pages/employee/AlquileresActivosPage.jsx';
-
+import CargosAdicionalesPage from './pages/employee/CargosAdicionalesPage.jsx';
+import DevolucionPage from './pages/employee/DevolucionPage.jsx';
+import HistorialAlquileresPage from './pages/employee/HistorialAlquileresPage.jsx';
 // ===================================
 // PROTECCIÓN DE RUTAS
 // ===================================
@@ -119,6 +121,38 @@ function App() {
         element={
           <ProtectedRoute allowedRoles={['ADMINISTRADOR', 'EMPLEADO']}>
             <AlquileresActivosPage />
+          </ProtectedRoute>
+        }
+      />
+      
+
+      <Route
+        path="/dashboard/alquileres-historial"
+        element={
+          <ProtectedRoute
+            allowedRoles={['ADMINISTRADOR', 'EMPLEADO']}
+          >
+            <HistorialAlquileresPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/dashboard/alquileres/:id/devolucion"
+        element={
+          <ProtectedRoute allowedRoles={['ADMINISTRADOR', 'EMPLEADO']}>
+            <DevolucionPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/dashboard/alquileres/:id/cargos-adicionales"
+        element={
+          <ProtectedRoute
+            allowedRoles={['ADMINISTRADOR', 'EMPLEADO']}
+          >
+            <CargosAdicionalesPage />
           </ProtectedRoute>
         }
       />

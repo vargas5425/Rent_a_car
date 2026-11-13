@@ -75,6 +75,22 @@ export async function patchCancelarReserva(req, res) {
   }
 }
 
+
+export async function patchFinalizarReserva(req, res) {
+  try {
+    const reserva = await gestion.finalizarReserva(req.params.id);
+
+    return res.status(200).json({
+      mensaje: 'Reserva finalizada correctamente',
+      reserva
+    });
+
+  } catch (error) {
+    return responderError(res, error);
+  }
+}
+
+
 export async function getDisponibilidad(req, res) {
   try {
     const { fechaInicio, fechaFin } = req.query;

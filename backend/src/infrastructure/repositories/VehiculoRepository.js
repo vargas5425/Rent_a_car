@@ -33,12 +33,20 @@ class VehiculoRepository {
   // MÓDULO DE RESERVAS
   // ===================================
 
+ 
+  // ===================================
+  // 2. BUSCAR VEHÍCULOS DISPONIBLES
+  // VALIDAR RESERVAS Y ALQUILERES
+  // ===================================
+
   async findDisponibles(inicio, fin) {
     const bloqueantes = ESTADOS_BLOQUEANTES
       .map((estado) => sequelize.escape(estado))
       .join(', ');
 
-    const sinChoques = sequelize.literal(`
+    // 1. Verificar que no existan reservas
+    // que se crucen con el período solicitado
+    const sinChoquesReservas = sequelize.literal(`
       NOT EXISTS (
         SELECT 1
         FROM reservas AS r
@@ -49,13 +57,37 @@ class VehiculoRepository {
       )
     `);
 
+    // 2. Verificar que no existan alquileres
+    // pendientes o activos que se crucen con las fechas
+    
+    const sinChoquesAlquileres = sequelize.literal(`
+      NOT EXISTS (
+        SELECT 1
+        FROM alquileres AS a
+        WHERE a.vehiculo_id = \`Vehiculo\`.\`id\`
+          AND (
+            a.estado = 'ACTIVO'
+            OR (
+              a.estado = 'PENDIENTE'
+              AND a.fecha_inicio < ${sequelize.escape(fin)}
+              AND a.fecha_fin > ${sequelize.escape(inicio)}
+            )
+          )
+      )
+    `);
+
+
+    // 3. Buscar vehículos que cumplan ambas condiciones
     return await VehiculoModel.findAll({
       where: {
         activo: true,
         estado: {
           [Op.ne]: 'MANTENIMIENTO'
         },
-        [Op.and]: [sinChoques]
+        [Op.and]: [
+          sinChoquesReservas,
+          sinChoquesAlquileres
+        ]
       },
       include: [
         { model: CategoriaModel, as: 'categoria' },
@@ -64,12 +96,30 @@ class VehiculoRepository {
     });
   }
 
+
   // ===================================
   // 3. BUSCAR VEHÍCULO POR ID
   // SOPORTA TRANSACCIONES
   // ===================================
 
+  
+  // ===================================
+  // 3. BUSCAR VEHÍCULO POR ID
+  // SOPORTA TRANSACCIONES Y BLOQUEOS
+  // ===================================
+
   async findById(id, options = {}) {
+
+    // Si la consulta solicita un bloqueo,
+    // buscar únicamente el vehículo.
+    // No cargar categoría ni tarifas.
+    if (options.lock) {
+      return await VehiculoModel.findByPk(id, {
+        ...options
+      });
+    }
+
+    // Consulta normal: incluir relaciones
     return await VehiculoModel.findByPk(id, {
       ...options,
       include: [
@@ -78,6 +128,7 @@ class VehiculoRepository {
       ]
     });
   }
+
 
   // ===================================
   // 4. CREAR VEHÍCULO

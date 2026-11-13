@@ -15,13 +15,13 @@ class CargoAdicionalController {
 
   async registrar(req, res) {
     try {
-      // Obtener el ID del alquiler desde la URL
+      // 1. Obtener el ID del alquiler desde la URL
       const { id } = req.params;
 
-      // Obtener los datos enviados en el body
+      // 2. Obtener los datos enviados
       const { tipo, descripcion, monto } = req.body ?? {};
 
-      // Ejecutar el caso de uso
+      // 3. Ejecutar el caso de uso
       const cargo = await registrarCargoService.ejecutar(
         id,
         {
@@ -31,20 +31,25 @@ class CargoAdicionalController {
         }
       );
 
-      // Respuesta exitosa
+      // 4. Responder correctamente
       return res.status(201).json({
         mensaje: 'Cargo adicional registrado correctamente',
         cargo
       });
 
     } catch (error) {
-      // Errores de validación conocidos
       const mensaje = error.message;
 
+      // 5. Errores de validación (400)
+      const erroresValidacion = [
+        'El ID del alquiler no es válido',
+        'Los datos del cargo son obligatorios',
+        'El tipo de cargo no es válido',
+        'La descripción es obligatoria'
+      ];
+
       if (
-        mensaje === 'El ID del alquiler no es válido' ||
-        mensaje === 'El tipo de cargo no es válido' ||
-        mensaje === 'La descripción es obligatoria' ||
+        erroresValidacion.includes(mensaje) ||
         mensaje.startsWith('El monto debe')
       ) {
         return res.status(400).json({
@@ -52,19 +57,33 @@ class CargoAdicionalController {
         });
       }
 
-      if (mensaje === 'El alquiler no existe') {
+      // 6. Recursos inexistentes (404)
+      const erroresNoEncontrado = [
+        'El alquiler no existe',
+        'La reserva asociada no existe'
+      ];
+
+      if (erroresNoEncontrado.includes(mensaje)) {
         return res.status(404).json({
           error: mensaje
         });
       }
 
-      if (mensaje === 'No se pueden registrar cargos en este alquiler') {
+      // 7. Conflictos de estado (409)
+      const erroresConflicto = [
+        'No se pueden registrar cargos en este alquiler',
+        'El alquiler no tiene una reserva asociada',
+        'No se pueden registrar cargos en una reserva finalizada',
+        'El estado de la reserva no permite registrar cargos adicionales'
+      ];
+
+      if (erroresConflicto.includes(mensaje)) {
         return res.status(409).json({
           error: mensaje
         });
       }
 
-      // Error inesperado
+      // 8. Errores inesperados (500)
       console.error('Error al registrar cargo:', error);
 
       return res.status(500).json({

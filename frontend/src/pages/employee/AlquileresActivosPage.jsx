@@ -1,5 +1,5 @@
-
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import './AlquileresActivosPage.css';
 
@@ -7,6 +7,8 @@ const API_URL =
   import.meta.env.VITE_API_URL || 'http://localhost:4000';
 
 function AlquileresActivosPage() {
+  const navigate = useNavigate();
+
   const [alquileres, setAlquileres] = useState([]);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState('');
@@ -141,6 +143,7 @@ function AlquileresActivosPage() {
                   <th>Entrega</th>
                   <th>Monto</th>
                   <th>Estado</th>
+                  <th>Acciones</th>
                 </tr>
               </thead>
 
@@ -179,6 +182,17 @@ function AlquileresActivosPage() {
                       <span className="badge bg-success">
                         {alquiler.estado}
                       </span>
+                    </td>
+                    <td>
+                      <button
+                        type="button"
+                        className="btn btn-outline-primary btn-sm"
+                        onClick={() =>
+                          navigate(`/dashboard/alquileres/${alquiler.id}/devolucion`)
+                        }
+                      >
+                        Registrar devolución
+                      </button>
                     </td>
                   </tr>
                 ))}

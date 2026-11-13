@@ -55,6 +55,18 @@ ReservaModel.belongsTo(VehiculoModel, {
 // RELACIONES DE ALQUILERES
 // ===================================
 
+
+ReservaModel.hasOne(AlquilerModel, {
+  foreignKey: 'reserva_id',
+  as: 'alquiler'
+});
+
+AlquilerModel.belongsTo(ReservaModel, {
+  foreignKey: 'reserva_id',
+  as: 'reserva'
+});
+
+
 UsuarioModel.hasMany(AlquilerModel, {
   foreignKey: 'usuario_id',
   as: 'alquileres'

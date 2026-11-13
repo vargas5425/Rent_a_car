@@ -9,6 +9,18 @@ const AlquilerModel = sequelize.define('Alquiler', {
     autoIncrement: true
   },
 
+  reserva_id: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    unique: true,
+    references: {
+      model: 'reservas',
+      key: 'id'
+    },
+    onUpdate: 'CASCADE',
+    onDelete: 'RESTRICT'
+  },
+
   usuario_id: {
     type: DataTypes.INTEGER,
     allowNull: false,
@@ -67,9 +79,24 @@ const AlquilerModel = sequelize.define('Alquiler', {
     allowNull: true
   },
 
+  observaciones_devolucion: {
+    type: DataTypes.TEXT,
+    allowNull: true
+  },
+  
+  modalidad: {
+  type: DataTypes.ENUM('HORA', 'DIA', 'SEMANA', 'MES'),
+  allowNull: true
+  },
+
+  precio_unitario: {
+    type: DataTypes.DECIMAL(10, 2),
+    allowNull: true
+  },
+
   tarifa_diaria: {
     type: DataTypes.DECIMAL(10, 2),
-    allowNull: false
+    allowNull: true
   },
 
   monto_total: {

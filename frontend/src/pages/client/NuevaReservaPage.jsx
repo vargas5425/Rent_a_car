@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import api from '../../services/api';
 import { crearReserva } from '../../services/reservasService';
+import { obtenerMensajeError } from '../../utils/manejarErrores';
 import { aInputFecha, calcularTotal, formatearBs } from '../../utils/reservas';
 import { obtenerUrlImagen } from '../../utils/imagenes';
 import Navbar from '../../components/layout/Navbar/Navbar';
@@ -32,8 +33,12 @@ export default function NuevaReservaPage() {
         if (encontrado) setVehiculo(encontrado);
         else setErrorCarga('No encontramos ese vehículo.');
       } catch (err) {
-        if (isMounted) setErrorCarga(err.response?.data?.error || 'Error al cargar el vehículo.');
-      } finally {
+        if (isMounted) {
+          setErrorCarga(
+            obtenerMensajeError(err, 'No se pudo cargar la información del vehículo.')
+          );
+        }
+} finally {
         if (isMounted) setCargando(false);
       }
     };
@@ -85,8 +90,10 @@ export default function NuevaReservaPage() {
       });
       navigate(`/reservas/${reserva.id}`);
     } catch (err) {
-      setError(err.response?.data?.error || 'No se pudo crear la reserva.');
-    } finally {
+    setError(
+      obtenerMensajeError(err, 'No se pudo crear la reserva.')
+    );
+  } finally {
       setEnviando(false);
     }
   };

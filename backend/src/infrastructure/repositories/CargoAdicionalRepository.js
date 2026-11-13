@@ -29,8 +29,10 @@ class CargoAdicionalRepository {
   }
 
   // Calcular total de cargos de un alquiler
-  async calcularTotal(alquilerId) {
+  
+  async calcularTotal(alquilerId, options = {}) {
     const total = await CargoAdicionalModel.sum('monto', {
+      ...options,
       where: {
         alquiler_id: alquilerId
       }
@@ -38,7 +40,6 @@ class CargoAdicionalRepository {
 
     return Number(total ?? 0);
   }
-
 }
 
 export default new CargoAdicionalRepository();
