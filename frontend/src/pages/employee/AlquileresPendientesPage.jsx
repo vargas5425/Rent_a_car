@@ -12,9 +12,12 @@ export default function AlquileresPendientesPage() {
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState('');
 
-  const cargarAlquileres = async () => {
-    setCargando(true);
-    setError('');
+  
+  const cargarAlquileres = async (mostrarCarga = true) => {
+    if (mostrarCarga) {
+      setCargando(true);
+      setError('');
+    }
 
     try {
       const respuesta = await api.get('/alquileres/pendientes');
@@ -37,9 +40,46 @@ export default function AlquileresPendientesPage() {
     }
   };
 
+
+    
   useEffect(() => {
-    cargarAlquileres();
-  }, []);
+    let activo = true;
+
+    const cargarInicial = async () => {
+      try {
+        const respuesta = await api.get('/alquileres/pendientes');
+
+        if (!activo) return;
+
+        setAlquileres(
+          Array.isArray(respuesta.data?.alquileres)
+            ? respuesta.data.alquileres
+            : []
+        );
+      } catch (err) {
+        if (!activo) return;
+
+        setAlquileres([]);
+        setError(
+          obtenerMensajeError(
+            err,
+            'No se pudieron cargar los alquileres pendientes.'
+          )
+        );
+      } finally {
+        if (activo) {
+          setCargando(false);
+        }
+      }
+    };
+
+  cargarInicial();
+
+  return () => {
+    activo = false;
+  };
+}, []);
+
 
   const formatearFecha = (fecha) => {
     if (!fecha) return 'Sin registrar';
