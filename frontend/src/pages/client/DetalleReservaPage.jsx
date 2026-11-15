@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useAuth } from '../../context/useAuth';
 import { obtenerReserva, cancelarReserva, confirmarReserva } from '../../services/reservasService';
+import { obtenerMensajeError } from '../../utils/manejarErrores';
 import { formatearFecha, formatearBs, puedeCancelar } from '../../utils/reservas';
 import EstadoBadge from '../../components/reservas/EstadoBadge';
 import TimelineEstados from '../../components/reservas/TimelineEstados';
@@ -26,9 +27,18 @@ export default function DetalleReservaPage() {
       try {
         const datos = await obtenerReserva(id);
         if (isMounted) setReserva(datos);
-      } catch (err) {
-        if (isMounted) setError(err.response?.data?.error || 'Error al cargar la reserva.');
-      } finally {
+      
+} catch (err) {
+  if (isMounted) {
+    setError(
+      obtenerMensajeError(
+        err,
+        'No se pudo cargar la información de la reserva.'
+      )
+    );
+  }
+}
+finally {
         if (isMounted) setCargando(false);
       }
     };
@@ -36,18 +46,30 @@ export default function DetalleReservaPage() {
     return () => { isMounted = false; };
   }, [id]);
 
-  const ejecutar = async (accion, mensajeError) => {
-    setAccionEnCurso(true);
-    setError('');
-    try {
-      const actualizada = await accion(reserva.id);
-      setReserva((anterior) => ({ ...anterior, ...actualizada }));
-    } catch (err) {
-      setError(err.response?.data?.error || mensajeError);
-    } finally {
-      setAccionEnCurso(false);
-    }
-  };
+  
+const ejecutar = async (accion, mensajeError) => {
+  if (accionEnCurso || !reserva) return;
+
+  setAccionEnCurso(true);
+  setError('');
+
+  try {
+    const actualizada = await accion(reserva.id);
+
+    setReserva((anterior) => ({
+      ...anterior,
+      ...actualizada
+    }));
+
+  } catch (err) {
+    setError(
+      obtenerMensajeError(err, mensajeError)
+    );
+  } finally {
+    setAccionEnCurso(false);
+  }
+};
+
 
   const handleCancelar = () => {
     if (!window.confirm('¿Seguro que deseas cancelar esta reserva?')) return;

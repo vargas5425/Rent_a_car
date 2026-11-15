@@ -5,6 +5,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { sequelize } from './infrastructure/models/index.js';
 import authRoutes from './presentation/routes/authRoutes.js'; 
+import alquilerRoutes from './presentation/routes/alquilerRoutes.js';
 import vehiculoRoutes from './presentation/routes/vehiculoRoutes.js';
 import reservaRoutes from './presentation/routes/reservaRoutes.js';
 import categoriaRoutes from './presentation/routes/categoriaRoutes.js'; // (si lo tienes)
@@ -28,6 +29,9 @@ app.use('/api/vehiculos', vehiculoRoutes);
 app.use('/api/reservas', reservaRoutes);
 app.use('/api/categorias', categoriaRoutes);
 app.use('/api/tarifas', tarifaRoutes); // 👈
+
+// Rutas de alquileres y cargos adicionales
+app.use('/api/alquileres', alquilerRoutes);
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'Rent a Car API funcionando' });

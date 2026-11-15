@@ -57,6 +57,46 @@ export default function DashboardPage() {
             </div>
           </div>
 
+
+          {/* Card: Alquileres pendientes */}
+          <div className="col-md-4">
+            <div className="card p-4 dashboard-card">
+              <div className="d-flex justify-content-between align-items-center mb-3">
+                <div
+                  className="rounded-circle d-flex align-items-center justify-content-center dashboard-icon dashboard-icon--warning"
+                  style={{
+                    backgroundColor: 'rgba(255, 193, 7, 0.1)',
+                    width: '50px',
+                    height: '50px',
+                    fontSize: '24px'
+                  }}
+                >
+                  🚗
+                </div>
+              </div>
+
+              <h4
+                className="fw-bold mb-1 dashboard-card-title"
+                style={{ color: 'var(--rc-text)' }}
+              >
+                Alquileres pendientes
+              </h4>
+
+              <p className="mb-4 dashboard-card-text">
+                Consulta los alquileres pendientes y registra
+                la entrega de vehículos a los clientes.
+              </p>
+
+              <Link
+                to="/dashboard/alquileres-pendientes"
+                className="btn btn-dark w-100 mt-auto"
+              >
+                Gestionar entregas
+              </Link>
+            </div>
+          </div>
+
+
           {/* Card: Tarifas (solo ADMINISTRADOR) */}
           {usuario.rol === 'ADMINISTRADOR' && (
             <div className="col-md-4">

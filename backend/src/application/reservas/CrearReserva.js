@@ -39,7 +39,10 @@ export function construirCrearReserva({ reservaRepo, vehiculoRepo }) {
       throw errorConflicto('El vehículo ya está reservado en ese horario');
     }
 
-    await vehiculoRepo.update(vehiculo.id, { estado: 'RESERVADA' });
+    // La reserva ya fue creada dentro de una transacción.
+    // No cambiamos el estado físico del vehículo por una reserva futura.
+    // La ocupación por fechas se controla desde las reservas y alquileres.
+
     return reserva;
   };
 }
