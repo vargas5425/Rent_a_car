@@ -1,10 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
-import './AlquileresActivosPage.css';
-
-const API_URL =
-  import.meta.env.VITE_API_URL || 'http://localhost:4000';
+import api from '../../services/api';
+import { obtenerMensajeError } from '../../utils/manejarErrores';import './AlquileresActivosPage.css';
 
 function AlquileresActivosPage() {
   const navigate = useNavigate();
@@ -13,46 +10,70 @@ function AlquileresActivosPage() {
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState('');
 
+
   const cargarAlquileres = async () => {
+    setCargando(true);
+    setError('');
+
     try {
-      setCargando(true);
-      setError('');
+      const respuesta = await api.get('/alquileres/activos');
 
-      // Ajustar esta clave si el login utiliza otra.
-      const token = localStorage.getItem('token');
-
-      if (!token) {
-        setError('No se encontró una sesión activa.');
-        return;
-      }
-
-      const respuesta = await axios.get(
-        `${API_URL}/alquileres/activos`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        }
+      setAlquileres(
+        Array.isArray(respuesta.data?.alquileres)
+          ? respuesta.data.alquileres
+          : []
       );
-
-      setAlquileres(respuesta.data.alquileres || []);
     } catch (err) {
-      console.error('Error al cargar alquileres:', err);
-
-      if (err.response?.status === 401 ||
-          err.response?.status === 403) {
-        setError('Tu sesión no es válida o no tienes permisos.');
-      } else {
-        setError('No se pudieron cargar los alquileres activos.');
-      }
+      setAlquileres([]);
+      setError(
+        obtenerMensajeError(
+          err,
+          'No se pudieron cargar los alquileres activos.'
+        )
+      );
     } finally {
       setCargando(false);
     }
   };
 
   useEffect(() => {
-    cargarAlquileres();
+    let activo = true;
+
+    const cargarInicial = async () => {
+      try {
+        const respuesta = await api.get('/alquileres/activos');
+
+        if (!activo) return;
+
+        setAlquileres(
+          Array.isArray(respuesta.data?.alquileres)
+            ? respuesta.data.alquileres
+            : []
+        );
+      } catch (err) {
+        if (!activo) return;
+
+        setAlquileres([]);
+        setError(
+          obtenerMensajeError(
+            err,
+            'No se pudieron cargar los alquileres activos.'
+          )
+        );
+      } finally {
+        if (activo) {
+          setCargando(false);
+        }
+      }
+    };
+
+    cargarInicial();
+
+    return () => {
+      activo = false;
+    };
   }, []);
+
 
   const formatearFecha = (fecha) => {
     if (!fecha) return 'Sin registrar';
