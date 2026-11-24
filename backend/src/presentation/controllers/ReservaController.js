@@ -1,25 +1,44 @@
+
 import ReservaRepository from '../../infrastructure/repositories/ReservaRepository.js';
 import VehiculoRepository from '../../infrastructure/repositories/VehiculoRepository.js';
 import { construirCrearReserva } from '../../application/reservas/CrearReserva.js';
 import { construirGestionReservas } from '../../application/reservas/GestionReserva.js';
 
-// Aquí se "enchufan" los repositorios reales (MySQL) a los casos de uso.
-const dependencias = { reservaRepo: ReservaRepository, vehiculoRepo: VehiculoRepository };
+// Inyección de dependencias
+const dependencias = {
+  reservaRepo: ReservaRepository,
+  vehiculoRepo: VehiculoRepository
+};
+
 const crearReserva = construirCrearReserva(dependencias);
 const gestion = construirGestionReservas(dependencias);
 
-// Los errores de negocio (ReservaError) traen su propio status; el resto es un 500.
+// Manejo de errores
 function responderError(res, error) {
   if (error.status) {
-    return res.status(error.status).json({ error: error.message, codigo: error.codigo });
+    return res.status(error.status).json({
+      error: error.message,
+      codigo: error.codigo
+    });
   }
+
   console.error(error);
-  return res.status(500).json({ error: 'Error interno del servidor' });
+
+  return res.status(500).json({
+    error: 'Error interno del servidor'
+  });
 }
 
+// Crear una reserva
 export async function postReserva(req, res) {
   try {
-    const { vehiculoId, fechaInicio, fechaFin, modalidad } = req.body;
+    const {
+      vehiculoId,
+      fechaInicio,
+      fechaFin,
+      modalidad
+    } = req.body;
+
     const reserva = await crearReserva({
       usuarioId: req.usuario.id,
       vehiculoId,
@@ -27,58 +46,108 @@ export async function postReserva(req, res) {
       fechaFin,
       modalidad
     });
-    res.status(201).json({ mensaje: 'Reserva creada exitosamente', reserva });
+
+    return res.status(201).json({
+      mensaje: 'Reserva creada exitosamente',
+      reserva
+    });
+
   } catch (error) {
-    responderError(res, error);
+    return responderError(res, error);
   }
 }
 
+// Consultar reservas del cliente autenticado
 export async function getMisReservas(req, res) {
   try {
-    res.status(200).json(await gestion.listarMisReservas(req.usuario.id));
+    return res.status(200).json(
+      await gestion.listarMisReservas(req.usuario.id)
+    );
   } catch (error) {
-    responderError(res, error);
+    return responderError(res, error);
   }
 }
 
+// Consultar todas las reservas
 export async function getReservas(req, res) {
   try {
-    res.status(200).json(await gestion.listarTodas());
+    return res.status(200).json(
+      await gestion.listarTodas()
+    );
   } catch (error) {
-    responderError(res, error);
+    return responderError(res, error);
   }
 }
 
+// Consultar una reserva específica
 export async function getReserva(req, res) {
   try {
-    res.status(200).json(await gestion.obtenerReserva(req.params.id, req.usuario));
+    return res.status(200).json(
+      await gestion.obtenerReserva(
+        req.params.id,
+        req.usuario
+      )
+    );
   } catch (error) {
-    responderError(res, error);
+    return responderError(res, error);
   }
 }
 
+// Confirmar reserva y registrar historial
 export async function patchConfirmarReserva(req, res) {
   try {
-    const reserva = await gestion.confirmarReserva(req.params.id);
-    res.status(200).json({ mensaje: 'Reserva confirmada', reserva });
+    if (!req.usuario?.id) {
+      return res.status(401).json({
+        error: 'Usuario no autenticado'
+      });
+    }
+
+    const reserva = await gestion.confirmarReserva(
+      req.params.id,
+      req.usuario
+    );
+
+    return res.status(200).json({
+      mensaje: 'Reserva confirmada',
+      reserva
+    });
+
   } catch (error) {
-    responderError(res, error);
+    return responderError(res, error);
   }
 }
 
+// Cancelar reserva y registrar historial
 export async function patchCancelarReserva(req, res) {
   try {
-    const reserva = await gestion.cancelarReserva(req.params.id, req.usuario);
-    res.status(200).json({ mensaje: 'Reserva cancelada', reserva });
+    const reserva = await gestion.cancelarReserva(
+      req.params.id,
+      req.usuario
+    );
+
+    return res.status(200).json({
+      mensaje: 'Reserva cancelada',
+      reserva
+    });
+
   } catch (error) {
-    responderError(res, error);
+    return responderError(res, error);
   }
 }
 
-
+// Finalizar reserva y registrar historial
 export async function patchFinalizarReserva(req, res) {
   try {
-    const reserva = await gestion.finalizarReserva(req.params.id);
+    if (!req.usuario?.id) {
+      return res.status(401).json({
+        error: 'Usuario no autenticado'
+      });
+    }
+
+    const reserva = await gestion.finalizarReserva(
+      req.params.id,
+      req.usuario
+    );
 
     return res.status(200).json({
       mensaje: 'Reserva finalizada correctamente',
@@ -90,13 +159,20 @@ export async function patchFinalizarReserva(req, res) {
   }
 }
 
-
+// Consultar disponibilidad de vehículos
 export async function getDisponibilidad(req, res) {
   try {
     const { fechaInicio, fechaFin } = req.query;
-    const vehiculos = await gestion.buscarVehiculosDisponibles({ fechaInicio, fechaFin });
-    res.status(200).json(vehiculos);
+
+    const vehiculos =
+      await gestion.buscarVehiculosDisponibles({
+        fechaInicio,
+        fechaFin
+      });
+
+    return res.status(200).json(vehiculos);
+
   } catch (error) {
-    responderError(res, error);
+    return responderError(res, error);
   }
 }

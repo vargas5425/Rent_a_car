@@ -17,6 +17,8 @@ import VehiculosPage from './pages/client/VehiculosPage';
 import NuevaReservaPage from './pages/client/NuevaReservaPage';
 import MisReservasPage from './pages/client/MisReservasPage';
 import DetalleReservaPage from './pages/client/DetalleReservaPage';
+import MisPagosPage from './pages/client/MisPagosPage.jsx';
+import MiHistorialPage from './pages/client/MiHistorialPage.jsx';
 
 // ===================================
 // PÁGINAS DE ADMINISTRACIÓN
@@ -27,6 +29,7 @@ import CrearVehiculoPage from './pages/admin/CrearVehiculoPage';
 import AdminVehiculosPage from './pages/admin/AdminVehiculosPage';
 import GestionReservasPage from './pages/admin/GestionReservasPage';
 import AdminTarifasPage from './pages/admin/AdminTarifasPage';
+import HistorialVehiculoPage from './pages/admin/HistorialVehiculoPage.jsx';
 
 // ===================================
 // PÁGINAS DE EMPLEADOS
@@ -38,6 +41,9 @@ import DevolucionPage from './pages/employee/DevolucionPage.jsx';
 import EntregaPage from './pages/employee/EntregaPage.jsx';
 import HistorialAlquileresPage from './pages/employee/HistorialAlquileresPage.jsx';
 import AlquileresPendientesPage from './pages/employee/AlquileresPendientesPage.jsx';
+import GestionPagosPage from './pages/employee/GestionPagosPage.jsx';
+import DetallePagosReservaPage from './pages/employee/DetallePagosReservaPage.jsx';
+
 // ===================================
 // PROTECCIÓN DE RUTAS
 // ===================================
@@ -96,6 +102,26 @@ function App() {
         }
       />
 
+      {/* Mis pagos del cliente */}
+      <Route
+        path="/mis-pagos"
+        element={
+          <ProtectedRoute allowedRoles={['CLIENTE']}>
+            <MisPagosPage />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Historial del cliente */}
+      <Route
+        path="/mi-historial"
+        element={
+          <ProtectedRoute allowedRoles={['CLIENTE']}>
+            <MiHistorialPage />
+          </ProtectedRoute>
+        }
+      />
+
       {/* ===================================
           RUTAS DE ADMINISTRADOR Y EMPLEADO
       =================================== */}
@@ -103,7 +129,9 @@ function App() {
       <Route
         path="/dashboard"
         element={
-          <ProtectedRoute allowedRoles={['ADMINISTRADOR', 'EMPLEADO']}>
+          <ProtectedRoute
+            allowedRoles={['ADMINISTRADOR', 'EMPLEADO']}
+          >
             <DashboardPage />
           </ProtectedRoute>
         }
@@ -112,7 +140,9 @@ function App() {
       <Route
         path="/dashboard/reservas"
         element={
-          <ProtectedRoute allowedRoles={['ADMINISTRADOR', 'EMPLEADO']}>
+          <ProtectedRoute
+            allowedRoles={['ADMINISTRADOR', 'EMPLEADO']}
+          >
             <GestionReservasPage />
           </ProtectedRoute>
         }
@@ -121,13 +151,14 @@ function App() {
       <Route
         path="/dashboard/alquileres-activos"
         element={
-          <ProtectedRoute allowedRoles={['ADMINISTRADOR', 'EMPLEADO']}>
+          <ProtectedRoute
+            allowedRoles={['ADMINISTRADOR', 'EMPLEADO']}
+          >
             <AlquileresActivosPage />
           </ProtectedRoute>
         }
       />
-      
-      
+
       <Route
         path="/dashboard/alquileres-pendientes"
         element={
@@ -138,7 +169,6 @@ function App() {
           </ProtectedRoute>
         }
       />
-
 
       <Route
         path="/dashboard/alquileres-historial"
@@ -151,7 +181,6 @@ function App() {
         }
       />
 
-
       <Route
         path="/dashboard/alquileres/:id/entrega"
         element={
@@ -163,11 +192,12 @@ function App() {
         }
       />
 
-
       <Route
         path="/dashboard/alquileres/:id/devolucion"
         element={
-          <ProtectedRoute allowedRoles={['ADMINISTRADOR', 'EMPLEADO']}>
+          <ProtectedRoute
+            allowedRoles={['ADMINISTRADOR', 'EMPLEADO']}
+          >
             <DevolucionPage />
           </ProtectedRoute>
         }
@@ -184,6 +214,44 @@ function App() {
         }
       />
 
+        {/* Historial de vehículos */}
+        <Route
+          path="/dashboard/historial-vehiculos"
+          element={
+            <ProtectedRoute
+              allowedRoles={['ADMINISTRADOR', 'EMPLEADO']}
+            >
+              <HistorialVehiculoPage />
+            </ProtectedRoute>
+          }
+        />
+
+      {/* ===================================
+          GESTIÓN DE PAGOS
+      =================================== */}
+
+      <Route
+        path="/dashboard/pagos"
+        element={
+          <ProtectedRoute
+            allowedRoles={['ADMINISTRADOR', 'EMPLEADO']}
+          >
+            <GestionPagosPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/dashboard/pagos/reserva/:reservaId"
+        element={
+          <ProtectedRoute
+            allowedRoles={['ADMINISTRADOR', 'EMPLEADO']}
+          >
+            <DetallePagosReservaPage />
+          </ProtectedRoute>
+        }
+      />
+
       {/* ===================================
           RUTAS SOLO PARA ADMINISTRADORES
       =================================== */}
@@ -191,7 +259,9 @@ function App() {
       <Route
         path="/vehiculos/crear"
         element={
-          <ProtectedRoute allowedRoles={['ADMINISTRADOR']}>
+          <ProtectedRoute
+            allowedRoles={['ADMINISTRADOR']}
+          >
             <CrearVehiculoPage />
           </ProtectedRoute>
         }
@@ -200,7 +270,9 @@ function App() {
       <Route
         path="/dashboard/admin/vehiculos/:id/editar"
         element={
-          <ProtectedRoute allowedRoles={['ADMINISTRADOR']}>
+          <ProtectedRoute
+            allowedRoles={['ADMINISTRADOR']}
+          >
             <CrearVehiculoPage />
           </ProtectedRoute>
         }
@@ -209,17 +281,20 @@ function App() {
       <Route
         path="/dashboard/admin/vehiculos"
         element={
-          <ProtectedRoute allowedRoles={['ADMINISTRADOR']}>
+          <ProtectedRoute
+            allowedRoles={['ADMINISTRADOR']}
+          >
             <AdminVehiculosPage />
           </ProtectedRoute>
         }
       />
 
-      {/* Administración de tarifas */}
       <Route
         path="/admin/tarifas"
         element={
-          <ProtectedRoute allowedRoles={['ADMINISTRADOR']}>
+          <ProtectedRoute
+            allowedRoles={['ADMINISTRADOR']}
+          >
             <AdminTarifasPage />
           </ProtectedRoute>
         }

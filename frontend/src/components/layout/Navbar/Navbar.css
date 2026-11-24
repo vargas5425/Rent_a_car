@@ -1,44 +1,62 @@
+
+/* =========================================
+   NAVBAR PRINCIPAL
+   ========================================= */
+
 .navbar-custom {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
-  background: var(--rc-bg) !important; /* 👈 Usar variable */
+  background: var(--rc-bg) !important;
   backdrop-filter: blur(10px);
   z-index: 1000;
-  padding: 20px 0;
+  padding: 16px 0;
   border-bottom: 1px solid var(--rc-border) !important;
-  transition: background-color 0.3s, border-color 0.3s;
+  transition: background-color 0.3s,
+              border-color 0.3s,
+              padding 0.3s;
 }
 
-/* Efecto de scroll del compañero */
+/* Efecto al hacer scroll */
+
 .rc-navbar--scrolled {
   padding: 10px 0;
   background: var(--rc-bg);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
+/* Contenedor principal */
+
 .navbar-container {
-  max-width: 1400px;
+  max-width: 1600px;
   margin: 0 auto;
-  padding: 0 40px;
+  padding: 0 24px;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 20px;
 }
 
-/* Marca */
-.navbar-brand {
+/* =========================================
+   LOGO Y MARCA
+   ========================================= */
+
+.navbar-custom .navbar-brand {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   font-weight: 800;
-  font-size: 1.25rem;
+  font-size: 1.15rem;
   color: var(--rc-text);
+  text-decoration: none;
+  white-space: nowrap;
+  flex-shrink: 0;
+  margin-right: 0;
 }
 
-.brand-logo {
-  height: 40px;
+.navbar-custom .brand-logo {
+  height: 44px;
   width: auto;
   object-fit: contain;
   border-radius: 50%;
@@ -46,27 +64,46 @@
 
 .brand-name {
   color: var(--rc-text);
+  white-space: nowrap;
 }
 
-/* Enlaces */
+/* =========================================
+   ENLACES DE NAVEGACIÓN
+   ========================================= */
+
 .navbar-links {
   display: flex;
   align-items: center;
-  gap: 24px;
+  justify-content: flex-end;
+  gap: 16px;
+  min-width: 0;
 }
 
-.nav-link-custom {
-  font-size: 0.95rem;
+.navbar-custom .nav-link-custom {
+  font-size: 0.9rem;
   font-weight: 600;
-  color: var(--brand-accent);
+  color: var(--rc-text);
+  text-decoration: none;
+  white-space: nowrap;
+  padding: 8px 0;
   transition: color 0.2s;
 }
 
-.nav-link-custom:hover {
+.navbar-custom .nav-link-custom:hover {
   color: #2563eb;
+  text-decoration: none;
 }
 
-/* Botones Login/Register */
+.navbar-custom a:focus-visible,
+.navbar-custom button:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 4px;
+}
+
+/* =========================================
+   BOTONES LOGIN Y REGISTER
+   ========================================= */
+
 .auth-buttons {
   display: flex;
   align-items: center;
@@ -81,6 +118,8 @@
   padding: 8px 20px;
   border-radius: 8px;
   border: 1px solid var(--rc-border);
+  text-decoration: none;
+  white-space: nowrap;
   transition: all 0.2s;
 }
 
@@ -95,25 +134,40 @@
   background: var(--brand-primary);
   padding: 8px 20px;
   border-radius: 8px;
+  text-decoration: none;
+  white-space: nowrap;
   transition: all 0.2s;
 }
 
 .btn-register:hover {
   background: #1e293b;
+  color: #ffffff;
   transform: translateY(-1px);
 }
 
-/* Usuario Logueado */
+/* =========================================
+   USUARIO AUTENTICADO
+   ========================================= */
+
 .user-menu {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.navbar-custom .user-menu {
+  margin-left: 0 !important;
 }
 
 .user-name {
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   font-weight: 600;
   color: var(--rc-text);
+  white-space: nowrap;
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .btn-logout {
@@ -125,17 +179,19 @@
   font-size: 0.9rem;
   font-weight: 600;
   cursor: pointer;
+  white-space: nowrap;
   transition: all 0.2s;
 }
 
 .btn-logout:hover {
-  background: #ef4444;
+  background: #dc2626;
   color: #ffffff;
 }
 
 /* =========================================
-   El Switch de Modo Oscuro (Del compañero)
+   SWITCH DE MODO OSCURO
    ========================================= */
+
 .rc-theme {
   position: relative;
   display: inline-flex;
@@ -147,6 +203,12 @@
   font-size: 0.85rem;
   font-weight: 600;
   cursor: pointer;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.navbar-custom .rc-theme {
+  margin-left: 0 !important;
 }
 
 .rc-theme__opt {
@@ -155,7 +217,7 @@
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  padding: 0.35rem 0.85rem;
+  padding: 0.35rem 0.75rem;
   border-radius: 999px;
   transition: color 0.3s;
 }
@@ -169,22 +231,150 @@
   width: calc(50% - 3px);
   border-radius: 999px;
   background: var(--rc-accent);
-  transition: transform 0.35s cubic-bezier(0.3, 1.3, 0.5, 1);
+  transition: transform 0.35s
+    cubic-bezier(0.3, 1.3, 0.5, 1);
 }
 
-.rc-theme__opt--work { color: #1a1a1a; }
-.rc-theme__opt--sleep { color: var(--rc-text); }
-
-[data-theme="dark"] .rc-theme__thumb { 
-  transform: translateX(100%); 
-  background: #7c8cff; 
+.rc-theme__opt--work {
+  color: #1a1a1a;
 }
-[data-theme="dark"] .rc-theme__opt--work { color: var(--rc-text); }
-[data-theme="dark"] .rc-theme__opt--sleep { color: #ffffff; }
 
-/* Responsive */
+.rc-theme__opt--sleep {
+  color: var(--rc-text);
+}
+
+/* =========================================
+   MODO OSCURO
+   ========================================= */
+
+[data-theme="dark"] .rc-theme__thumb {
+  transform: translateX(100%);
+  background: #7c8cff;
+}
+
+[data-theme="dark"] .rc-theme__opt--work {
+  color: var(--rc-text);
+}
+
+[data-theme="dark"] .rc-theme__opt--sleep {
+  color: #ffffff;
+}
+
+[data-theme="dark"] .navbar-custom .nav-link-custom:hover {
+  color: #93c5fd;
+}
+
+[data-theme="dark"] .btn-logout {
+  color: #f87171;
+  border-color: #f87171;
+}
+
+[data-theme="dark"] .btn-logout:hover {
+  background: #dc2626;
+  color: #ffffff;
+}
+
+/* =========================================
+   PANTALLAS MEDIANAS
+   ========================================= */
+
+@media (max-width: 1400px) {
+
+  .navbar-container {
+    padding: 0 20px;
+    gap: 12px;
+  }
+
+  .navbar-links {
+    gap: 12px;
+  }
+
+  .navbar-custom .nav-link-custom {
+    font-size: 0.85rem;
+  }
+
+  .navbar-custom .navbar-brand {
+    font-size: 1rem;
+  }
+
+  .user-name {
+    max-width: 100px;
+    font-size: 0.85rem;
+  }
+
+  .rc-theme__opt {
+    padding: 0.3rem 0.6rem;
+  }
+}
+
+/* =========================================
+   TABLETS
+   ========================================= */
+
+@media (max-width: 1200px) {
+
+  .navbar-container {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px;
+  }
+
+  .navbar-links {
+    width: 100%;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .navbar-custom {
+    position: sticky;
+  }
+}
+
+/* =========================================
+   DISPOSITIVOS MÓVILES
+   ========================================= */
+
 @media (max-width: 768px) {
-  .navbar-container { padding: 0 20px; }
-  .navbar-links { gap: 16px; }
-  .nav-link-custom { display: none; }
+
+  .navbar-custom {
+    padding: 12px 0;
+    position: relative;
+  }
+
+  .navbar-container {
+    flex-direction: column;
+    padding: 0 12px;
+    gap: 12px;
+  }
+
+  .navbar-links {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px 16px;
+  }
+
+  .navbar-custom .nav-link-custom {
+    display: inline-flex;
+    font-size: 0.85rem;
+    padding: 6px 0;
+  }
+
+  .user-menu {
+    justify-content: center;
+  }
+
+  .user-name {
+    max-width: 130px;
+  }
+
+  .auth-buttons {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .navbar-custom .brand-logo {
+    height: 40px;
+  }
 }

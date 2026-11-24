@@ -134,8 +134,12 @@ class VehiculoRepository {
   // 4. CREAR VEHÍCULO
   // ===================================
 
-  async create(data) {
-    return await VehiculoModel.create(data);
+  // ===================================
+  // SOPORTA TRANSACCIONES
+  // ===================================
+
+  async create(data, options = {}) {
+    return await VehiculoModel.create(data, options);
   }
 
   // ===================================
@@ -161,16 +165,27 @@ class VehiculoRepository {
   // BORRADO LÓGICO
   // ===================================
 
-  async delete(id) {
-    const vehiculo = await VehiculoModel.findByPk(id);
+ // ===================================
+  // 6. ELIMINAR VEHÍCULO
+  // BORRADO LÓGICO CON TRANSACCIONES
+  // ===================================
+
+  async delete(id, options = {}) {
+    const vehiculo = await VehiculoModel.findByPk(
+      id,
+      options
+    );
 
     if (!vehiculo) {
       return null;
     }
 
-    return await vehiculo.update({
-      activo: false
-    });
+    return await vehiculo.update(
+      {
+        activo: false
+      },
+      options
+    );
   }
 }
 

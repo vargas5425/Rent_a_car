@@ -5,7 +5,11 @@ import ReservaRepository from '../../infrastructure/repositories/ReservaReposito
 import AlquileresRepository from '../../infrastructure/repositories/AlquileresRepository.js';
 import { VehiculoModel } from '../../infrastructure/models/index.js';
 
-export async function crearAlquilerDesdeReserva(reservaId) {
+import RegistrarCambioEstado from '../Historial/RegistrarCambioEstado.js';
+
+const registrarCambioEstado = new RegistrarCambioEstado();
+
+export async function crearAlquilerDesdeReserva(reservaId, usuarioId) {
   const id = Number(reservaId);
 
   if (!Number.isInteger(id) || id <= 0) {
@@ -103,6 +107,17 @@ export async function crearAlquilerDesdeReserva(reservaId) {
       },
       { transaction }
     );
+
+    // 5. Registrar historial de creación del alquiler
+    await registrarCambioEstado.ejecutar({
+      tipoEntidad: 'ALQUILER',
+      entidadId: alquiler.id,
+      estadoAnterior: null,
+      estadoNuevo: 'PENDIENTE',
+      usuarioId,
+      observacion: 'Alquiler creado desde una reserva confirmada',
+      transaction
+    });
 
     return alquiler;
   });

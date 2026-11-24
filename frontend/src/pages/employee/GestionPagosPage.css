@@ -1,0 +1,75 @@
+
+.pagos-page {
+  min-height: 100vh;
+}
+
+.pagos-page .card {
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.pagos-page .table th {
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  padding: 16px;
+}
+
+.pagos-page .table td {
+  font-size: 14px;
+  padding: 16px;
+  vertical-align: middle;
+}
+
+.pagos-page .table tbody tr {
+  transition: background-color 0.2s ease;
+}
+
+.pagos-page .badge {
+  padding: 8px 12px;
+  font-size: 12px;
+}
+
+.pagos-page .form-control,
+.pagos-page .form-select {
+  min-height: 42px;
+}
+
+.pagos-page .saldo-reserva {
+  background-color: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 10px;
+}
+
+.pagos-page .saldo-reserva small {
+  font-size: 13px;
+}
+
+.pagos-page .table td:last-child {
+  white-space: nowrap;
+}
+
+.pagos-page .card-body h2 {
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 768px) {
+
+  .pagos-page h2 {
+    font-size: 23px;
+  }
+
+  .pagos-page .table th,
+  .pagos-page .table td {
+    font-size: 13px;
+    padding: 12px;
+  }
+
+  .pagos-page .saldo-reserva {
+    padding: 12px !important;
+  }
+
+  .pagos-page .form-label {
+    font-size: 14px;
+  }
+}

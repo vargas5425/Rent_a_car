@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../context/useAuth';
@@ -6,15 +7,23 @@ import logo from '../../../assets/images/logo.png';
 import './Navbar.css';
 
 export default function Navbar() {
+
   const { usuario, logout } = useAuth();
   const navigate = useNavigate();
+
   const [scrolled, setScrolled] = useState(false);
 
   // Efecto para que el navbar cambie al hacer scroll
   useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 40);
+
+    const handleScroll = () =>
+      setScrolled(window.scrollY > 40);
+
     window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+
+    return () =>
+      window.removeEventListener('scroll', handleScroll);
+
   }, []);
 
   const handleLogout = () => {
@@ -24,56 +33,162 @@ export default function Navbar() {
 
   return (
     <nav className={`navbar-custom ${scrolled ? 'rc-navbar--scrolled' : ''}`}>
+
       <div className="navbar-container">
-        
+
         {/* LOGO Y MARCA */}
+
         <Link to="/" className="navbar-brand">
-          <img src={logo} alt="Tierra Camba" className="brand-logo" />
+
+          <img
+            src={logo}
+            alt="Tierra Camba"
+            className="brand-logo"
+          />
+
           <span className="brand-name">
             Tierra Camba
           </span>
+
         </Link>
 
         {/* ENLACES Y BOTONES */}
+
         <div className="navbar-links">
+
           {usuario ? (
             <>
+
+              {/* MENÚ DEL CLIENTE */}
+
               {usuario.rol === 'CLIENTE' && (
                 <>
-                  <Link to="/vehiculos" className="nav-link-custom">
+
+                  <Link
+                    to="/vehiculos"
+                    className="nav-link-custom"
+                  >
                     List Cars
                   </Link>
-                  {/* ENLACE AGREGADO PARA EL CLIENTE */}
-                  <Link to="/mis-reservas" className="nav-link-custom">
+
+                  <Link
+                    to="/mis-reservas"
+                    className="nav-link-custom"
+                  >
                     Mis Reservas
                   </Link>
+
+                  <Link
+                    to="/mis-pagos"
+                    className="nav-link-custom"
+                  >
+                    Mis Pagos
+                  </Link>
+
+                  <Link
+                    to="/mi-historial"
+                    className="nav-link-custom"
+                  >
+                    Mi Historial
+                  </Link>
+
                 </>
               )}
-              {(usuario.rol === 'ADMINISTRADOR' || usuario.rol === 'EMPLEADO') && (
+
+              {/* MENÚ DEL ADMINISTRADOR Y EMPLEADO */}
+
+              {(usuario.rol === 'ADMINISTRADOR' ||
+                usuario.rol === 'EMPLEADO') && (
                 <>
-                  <Link to="/vehiculos" className="nav-link-custom">List Cars</Link>
-                  <Link to="/dashboard" className="nav-link-custom">Dashboard</Link>
-                  {/* ENLACE AGREGADO PARA EL STAFF */}
-                  <Link to="/dashboard/reservas" className="nav-link-custom">Gestión Reservas</Link>
+
+                  <Link
+                    to="/vehiculos"
+                    className="nav-link-custom"
+                  >
+                    List Cars
+                  </Link>
+
+                  <Link
+                    to="/dashboard"
+                    className="nav-link-custom"
+                  >
+                    Dashboard
+                  </Link>
+
+                  <Link
+                    to="/dashboard/reservas"
+                    className="nav-link-custom"
+                  >
+                    Gestión Reservas
+                  </Link>
+
+                  {/* NUEVO: GESTIÓN DE PAGOS */}
+
+                  <Link
+                    to="/dashboard/pagos"
+                    className="nav-link-custom"
+                  >
+                    Gestión de Pagos
+                  </Link>
+
+                  <Link
+                    to="/dashboard/historial-vehiculos"
+                    className="nav-link-custom"
+                  >
+                    Historial Vehículos
+                  </Link>
+
                 </>
               )}
-              
+
+              {/* INFORMACIÓN DEL USUARIO */}
+
               <div className="user-menu ms-3">
-                <span className="user-name">Hola, {usuario.nombre}</span>
-                <button onClick={handleLogout} className="btn-logout">Salir</button>
+
+                <span className="user-name">
+                  Hola, {usuario.nombre}
+                </span>
+
+                <button
+                  onClick={handleLogout}
+                  className="btn-logout"
+                >
+                  Salir
+                </button>
+
               </div>
+
             </>
           ) : (
+
             <div className="auth-buttons">
-              <Link to="/login" className="btn-login">Iniciar Sesión</Link>
-              <Link to="/register" className="btn-register">Registrarse</Link>
+
+              <Link
+                to="/login"
+                className="btn-login"
+              >
+                Iniciar Sesión
+              </Link>
+
+              <Link
+                to="/register"
+                className="btn-register"
+              >
+                Registrarse
+              </Link>
+
             </div>
+
           )}
 
-          {/* El botón mágico de Work/Sleep */}
+          {/* CAMBIO DE TEMA WORK / SLEEP */}
+
           <ThemeToggle />
+
         </div>
+
       </div>
+
     </nav>
   );
 }

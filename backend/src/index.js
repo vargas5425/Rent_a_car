@@ -10,6 +10,9 @@ import vehiculoRoutes from './presentation/routes/vehiculoRoutes.js';
 import reservaRoutes from './presentation/routes/reservaRoutes.js';
 import categoriaRoutes from './presentation/routes/categoriaRoutes.js'; // (si lo tienes)
 import tarifaRoutes from './presentation/routes/tarifaRoutes.js'; // 👈
+import pagoRoutes from './presentation/routes/pagoRoutes.js';
+import historialRoutes from './presentation/routes/HistorialRoutes.js';
+
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -29,6 +32,8 @@ app.use('/api/vehiculos', vehiculoRoutes);
 app.use('/api/reservas', reservaRoutes);
 app.use('/api/categorias', categoriaRoutes);
 app.use('/api/tarifas', tarifaRoutes); // 👈
+app.use('/api/pagos', pagoRoutes);
+app.use('/api/historial', historialRoutes);
 
 // Rutas de alquileres y cargos adicionales
 app.use('/api/alquileres', alquilerRoutes);

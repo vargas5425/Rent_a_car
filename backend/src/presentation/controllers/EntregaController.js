@@ -22,10 +22,24 @@ class EntregaController {
       } = req.body ?? {};
 
       // 4. Ejecutar el caso de uso
-      const resultado = await registrarEntrega(id, {
-        kilometraje_inicial,
-        combustible_inicial
-      });
+      // 4. Obtener el usuario autenticado
+      const usuarioId = req.usuario?.id;
+
+      if (!usuarioId) {
+        return res.status(401).json({
+          error: 'Usuario no autenticado'
+        });
+      }
+
+      // 5. Ejecutar el caso de uso
+      const resultado = await registrarEntrega(
+        id,
+        {
+          kilometraje_inicial,
+          combustible_inicial
+        },
+        usuarioId
+      );
 
       // 5. Devolver el resultado completo
       return res.status(200).json(resultado);

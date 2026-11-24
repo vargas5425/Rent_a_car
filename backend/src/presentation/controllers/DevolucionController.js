@@ -16,12 +16,26 @@ class DevolucionController {
       } = req.body;
 
       // 2. Enviar datos al servicio
-      const resultado = await registrarDevolucion(id, {
-        kilometraje_final,
-        combustible_final,
-        requiere_mantenimiento,
-        observaciones_devolucion
-      });
+      // 2. Obtener el ID del empleado autenticado
+      const usuarioId = req.usuario?.id;
+
+      if (!usuarioId) {
+        return res.status(401).json({
+          error: 'Usuario no autenticado'
+        });
+      }
+
+      // 3. Enviar datos al servicio
+      const resultado = await registrarDevolucion(
+        id,
+        {
+          kilometraje_final,
+          combustible_final,
+          requiere_mantenimiento,
+          observaciones_devolucion
+        },
+        usuarioId
+      );
 
       // 3. Responder si la devolución fue exitosa
       return res.status(200).json(resultado);

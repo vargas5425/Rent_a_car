@@ -9,7 +9,11 @@ import { calcularCargoRetraso } from './CalcularCargosDevolucion.js';
 import { calcularCargoCombustible } from './CalcularCargoCombustible.js';
 import ReservaRepository from '../../infrastructure/repositories/ReservaRepository.js';
 
-export async function registrarDevolucion(alquilerId, datos) {
+import RegistrarCambioEstado from '../Historial/RegistrarCambioEstado.js';
+
+const registrarCambioEstado = new RegistrarCambioEstado();
+
+export async function registrarDevolucion(alquilerId, datos, usuarioId) {
   const id = Number(alquilerId);
 
   // Validar datos sin convertir valores vacíos a cero
@@ -294,7 +298,42 @@ export async function registrarDevolucion(alquilerId, datos) {
       { transaction }
     );
 
-    // 7. Calcular el total de cargos existentes
+    // 9. Registrar historial del alquiler
+    await registrarCambioEstado.ejecutar({
+      tipoEntidad: 'ALQUILER',
+      entidadId: alquiler.id,
+      estadoAnterior: alquiler.estado,
+      estadoNuevo: 'FINALIZADO',
+      usuarioId,
+      observacion: 'Devolución del vehículo registrada',
+      transaction
+    });
+
+    // 10. Registrar historial de la reserva
+    await registrarCambioEstado.ejecutar({
+      tipoEntidad: 'RESERVA',
+      entidadId: reserva.id,
+      estadoAnterior: reserva.estado,
+      estadoNuevo: 'DEVUELTA',
+      usuarioId,
+      observacion: 'Reserva finalizada por devolución del vehículo',
+      transaction
+    });
+
+    // 11. Registrar historial del vehículo
+    await registrarCambioEstado.ejecutar({
+      tipoEntidad: 'VEHICULO',
+      entidadId: vehiculo.id,
+      estadoAnterior: vehiculo.estado,
+      estadoNuevo: nuevoEstadoVehiculo,
+      usuarioId,
+      observacion: requiereMantenimiento
+        ? 'Vehículo devuelto y enviado a mantenimiento'
+        : 'Vehículo devuelto y disponible para alquiler',
+      transaction
+    });
+
+    // Calcular el total de cargos existentes
     const totalCargos = await CargoAdicionalRepository.calcularTotal(
       id,
       { transaction }

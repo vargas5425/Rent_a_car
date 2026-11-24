@@ -1,0 +1,91 @@
+.mi-historial-page {
+  min-height: 100vh;
+  padding-top: 150px !important;
+}
+
+.mi-historial-page .card {
+  border-radius: 12px;
+}
+
+.mi-historial-page .form-control,
+.mi-historial-page .form-select {
+  min-height: 42px;
+}
+
+.mi-historial-page .badge {
+  font-size: 12px;
+  padding: 8px 12px;
+}
+
+/* Línea de tiempo */
+
+.historial-timeline {
+  position: relative;
+  margin-left: 10px;
+  padding-left: 25px;
+  border-left: 2px solid #dee2e6;
+}
+
+.historial-item {
+  position: relative;
+  padding-bottom: 24px;
+}
+
+.historial-item:last-child {
+  padding-bottom: 0;
+}
+
+.historial-punto {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  left: -33px;
+  top: 20px;
+  background-color: #0d6efd;
+  border: 3px solid #ffffff;
+  border-radius: 50%;
+  box-shadow: 0 0 0 2px #0d6efd;
+}
+
+.historial-contenido {
+  border: 1px solid #dee2e6;
+  background-color: var(--bs-body-bg, #ffffff);
+  border-radius: 10px;
+  padding: 18px;
+  transition: box-shadow 0.2s ease;
+}
+
+.historial-contenido:hover {
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.07);
+}
+
+/* Diseño responsive */
+
+@media (max-width: 768px) {
+.mi-historial-page {
+  padding-top: 160px !important;
+}
+
+  .mi-historial-page h2 {
+    font-size: 23px;
+  }
+
+  .historial-timeline {
+    margin-left: 5px;
+    padding-left: 18px;
+  }
+
+  .historial-punto {
+    left: -26px;
+  }
+
+  .historial-contenido {
+    padding: 12px;
+  }
+
+  .mi-historial-page .badge {
+    font-size: 11px;
+    padding: 6px 8px;
+  }
+
+}

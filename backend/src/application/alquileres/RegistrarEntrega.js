@@ -5,7 +5,10 @@ import AlquileresRepository from '../../infrastructure/repositories/AlquileresRe
 import VehiculoRepository from '../../infrastructure/repositories/VehiculoRepository.js';
 import ReservaRepository from '../../infrastructure/repositories/ReservaRepository.js';
 
-export async function registrarEntrega(alquilerId, datos) {
+import RegistrarCambioEstado from '../Historial/RegistrarCambioEstado.js';
+
+const registrarCambioEstado = new RegistrarCambioEstado();
+export async function registrarEntrega(alquilerId, datos, usuarioId) {
   const id = Number(alquilerId);
   const kilometraje = Number(datos.kilometraje_inicial);
   const combustible = Number(datos.combustible_inicial);
@@ -198,6 +201,40 @@ export async function registrarEntrega(alquilerId, datos) {
       },
       { transaction }
     );
+
+
+    // 7. Registrar historial del alquiler
+    await registrarCambioEstado.ejecutar({
+      tipoEntidad: 'ALQUILER',
+      entidadId: alquiler.id,
+      estadoAnterior: alquiler.estado,
+      estadoNuevo: 'ACTIVO',
+      usuarioId,
+      observacion: 'Entrega del vehículo al cliente',
+      transaction
+    });
+
+    // 8. Registrar historial de la reserva
+    await registrarCambioEstado.ejecutar({
+      tipoEntidad: 'RESERVA',
+      entidadId: reserva.id,
+      estadoAnterior: reserva.estado,
+      estadoNuevo: 'ENTREGADA',
+      usuarioId,
+      observacion: 'Reserva entregada al cliente',
+      transaction
+    });
+
+    // 9. Registrar historial del vehículo
+    await registrarCambioEstado.ejecutar({
+      tipoEntidad: 'VEHICULO',
+      entidadId: vehiculo.id,
+      estadoAnterior: vehiculo.estado,
+      estadoNuevo: 'ALQUILADA',
+      usuarioId,
+      observacion: 'Vehículo entregado y actualmente alquilado',
+      transaction
+    });
 
     return {
       mensaje: 'Entrega registrada correctamente',

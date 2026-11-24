@@ -1,0 +1,102 @@
+
+.historial-vehiculo-page {
+  min-height: 100vh;
+  padding-top: 150px !important;
+  padding-bottom: 40px !important;
+}
+
+.historial-vehiculo-page .card {
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.historial-vehiculo-page .card-header {
+  background-color: transparent;
+}
+
+.historial-vehiculo-page .table th {
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  padding: 16px;
+}
+
+.historial-vehiculo-page .table td {
+  font-size: 14px;
+  padding: 16px;
+  vertical-align: middle;
+}
+
+.historial-vehiculo-page .table tbody tr {
+  transition: background-color 0.2s ease;
+}
+
+.historial-vehiculo-page .badge {
+  padding: 8px 12px;
+  font-size: 12px;
+}
+
+.historial-vehiculo-page .form-control,
+.historial-vehiculo-page .form-select {
+  min-height: 42px;
+}
+
+.historial-vehiculo-page .filtro-historial {
+  width: auto;
+  min-width: 200px;
+}
+
+.historial-vehiculo-page .observacion-historial {
+  min-width: 220px;
+  max-width: 350px;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+/* MODO OSCURO */
+
+[data-theme="dark"] .historial-vehiculo-page .table-light {
+  --bs-table-bg: #1a202c;
+  --bs-table-color: #e2e8f0;
+  --bs-table-border-color: #303846;
+}
+
+[data-theme="dark"] .historial-vehiculo-page .card {
+  background-color: #1a202c;
+}
+
+[data-theme="dark"] .historial-vehiculo-page .card-header {
+  border-bottom-color: #303846;
+}
+
+[data-theme="dark"] .historial-vehiculo-page .text-secondary {
+  color: #a0aec0 !important;
+}
+
+/* RESPONSIVE */
+
+@media (max-width: 768px) {
+
+  .historial-vehiculo-page {
+    padding-top: 160px !important;
+  }
+
+  .historial-vehiculo-page h2 {
+    font-size: 23px;
+  }
+
+  .historial-vehiculo-page .table th,
+  .historial-vehiculo-page .table td {
+    font-size: 13px;
+    padding: 12px;
+  }
+
+  .historial-vehiculo-page .filtro-historial {
+    width: 100%;
+  }
+
+  .historial-vehiculo-page .badge {
+    font-size: 11px;
+    padding: 6px 8px;
+  }
+}

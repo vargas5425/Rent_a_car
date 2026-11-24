@@ -4,10 +4,22 @@ import { crearAlquilerDesdeReserva } from '../../application/alquileres/CrearAlq
 class CrearAlquilerController {
   async registrar(req, res) {
     try {
-      const { reservaId } = req.body;
+      const { reservaId } = req.body ?? {};
 
-      const alquiler = await crearAlquilerDesdeReserva(reservaId);
+      // Obtener el ID del empleado autenticado
+      const usuarioId = req.usuario?.id;
 
+      if (!usuarioId) {
+        return res.status(401).json({
+          error: 'Usuario no autenticado'
+        });
+      }
+
+      // Crear alquiler y registrar historial
+      const alquiler = await crearAlquilerDesdeReserva(
+        reservaId,
+        usuarioId
+      );
       return res.status(201).json({
         mensaje: 'Alquiler creado correctamente',
         alquiler

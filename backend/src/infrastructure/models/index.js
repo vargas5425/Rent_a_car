@@ -12,7 +12,9 @@ import CargoAdicionalModel from './CargoAdicionalModel.js';
 // Modelo del módulo de reservas
 import ReservaModel from './ReservaModel.js';
 import TarifaModel from './TarifaModel.js'; // 👈 Importamos Tarifa
-
+// Modelo del módulo de pagos
+import PagoModel from './PagoModel.js';
+import HistorialEstadoModel from './HistorialEstadoModel.js';
 // ===================================
 // RELACIONES DE CATEGORÍAS Y VEHÍCULOS
 // ===================================
@@ -102,6 +104,29 @@ CargoAdicionalModel.belongsTo(AlquilerModel, {
 });
 
 // ===================================
+// RELACIONES DE PAGOS
+// ===================================
+
+ReservaModel.hasMany(PagoModel, {
+  foreignKey: 'reserva_id',
+  as: 'pagos'
+});
+
+PagoModel.belongsTo(ReservaModel, {
+  foreignKey: 'reserva_id',
+  as: 'reserva'
+});
+
+UsuarioModel.hasMany(HistorialEstadoModel, {
+  foreignKey: 'usuario_id',
+  as: 'historialCambios'
+});
+
+HistorialEstadoModel.belongsTo(UsuarioModel, {
+  foreignKey: 'usuario_id',
+  as: 'usuario'
+});
+// ===================================
 // EXPORTACIÓN DE MODELOS
 // ===================================
 
@@ -121,6 +146,8 @@ export {
   ReservaModel,
   AlquilerModel,
   CargoAdicionalModel,
-  TarifaModel
+  TarifaModel,
+  PagoModel,
+  HistorialEstadoModel
 };
 
