@@ -1,7 +1,12 @@
 import { useState, useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useAuth } from '../../context/useAuth';
-import { obtenerReserva, cancelarReserva, confirmarReserva } from '../../services/reservasService';
+import {
+  obtenerReserva,
+  cancelarReserva,
+  confirmarReserva,
+  finalizarReserva
+} from '../../services/reservasService';
 import { formatearFecha, formatearBs, puedeCancelar } from '../../utils/reservas';
 import EstadoBadge from '../../components/reservas/EstadoBadge';
 import TimelineEstados from '../../components/reservas/TimelineEstados';
@@ -55,6 +60,11 @@ export default function DetalleReservaPage() {
   };
 
   const handleConfirmar = () => ejecutar(confirmarReserva, 'No se pudo confirmar la reserva.');
+
+  const handleFinalizar = () => {
+    if (!window.confirm('¿Confirmas finalizar esta reserva?')) return;
+    ejecutar(finalizarReserva, 'No se pudo finalizar la reserva.');
+  };
 
   const volverA = esStaff ? '/dashboard/reservas' : '/mis-reservas';
 
@@ -125,6 +135,11 @@ export default function DetalleReservaPage() {
               {esStaff && reserva.estado === 'RESERVADA' && (
                 <button className="btn btn-dark" onClick={handleConfirmar} disabled={accionEnCurso}>
                   Confirmar reserva
+                </button>
+              )}
+              {esStaff && reserva.estado === 'DEVUELTA' && (
+                <button className="btn btn-success" onClick={handleFinalizar} disabled={accionEnCurso}>
+                  {accionEnCurso ? 'Finalizando...' : 'Finalizar reserva'}
                 </button>
               )}
               {puedeCancelar(reserva.estado) && (

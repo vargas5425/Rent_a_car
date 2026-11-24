@@ -5,22 +5,28 @@ import { obtenerUrlImagen } from '../../utils/imagenes';
 import Navbar from '../../components/layout/Navbar/Navbar';
 
 export default function CrearVehiculoPage() {
-  const { id } = useParams(); 
+  const { id } = useParams();
   const navigate = useNavigate();
   const esEdicion = Boolean(id);
 
-  // 👇 Eliminamos precio_hora y precio_dia del estado inicial
   const [formData, setFormData] = useState({
-    placa: '', marca: '', modelo: '', anio: 2024, 
-    categoria_id: 1, transmision: 'MANUAL', pasajeros: 5, kilometraje_actual: 0,
-    estado: 'DISPONIBLE', imagen_url: ''
+    placa: '',
+    marca: '',
+    modelo: '',
+    anio: 2024,
+    categoria_id: 1,
+    transmision: 'MANUAL',
+    pasajeros: 5,
+    kilometraje_actual: 0,
+    estado: 'DISPONIBLE',
+    imagen_url: ''
   });
+  const [previewLocal, setPreviewLocal] = useState('');
   const [error, setError] = useState('');
   const [cargando, setCargando] = useState(esEdicion);
   const [subiendoImagen, setSubiendoImagen] = useState(false);
   const [categorias, setCategorias] = useState([]);
 
-  // Cargar categorías al montar el componente
   useEffect(() => {
     const cargarCategorias = async () => {
       try {
@@ -39,7 +45,7 @@ export default function CrearVehiculoPage() {
     const cargarVehiculo = async () => {
       try {
         const res = await api.get('/vehiculos');
-        const auto = res.data.find(v => String(v.id) === String(id));
+        const auto = res.data.find((v) => String(v.id) === String(id));
         if (auto && isMounted) setFormData(auto);
         else if (isMounted) setError('Vehículo no encontrado');
       } catch (err) {
@@ -49,28 +55,44 @@ export default function CrearVehiculoPage() {
       }
     };
     cargarVehiculo();
-    return () => { isMounted = false; };
+    return () => {
+      isMounted = false;
+    };
   }, [id, esEdicion]);
+
+  useEffect(() => {
+    return () => {
+      if (previewLocal) URL.revokeObjectURL(previewLocal);
+    };
+  }, [previewLocal]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   const handleImageUpload = async (e) => {
-    const file = e.target.files[0];
+    const file = e.target.files?.[0];
     if (!file) return;
 
+    const localUrl = URL.createObjectURL(file);
+    setPreviewLocal(localUrl);
+    setError('');
     setSubiendoImagen(true);
+
     const uploadData = new FormData();
     uploadData.append('imagen', file);
 
     try {
-      const res = await api.post('/vehiculos/upload', uploadData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
-      setFormData({ ...formData, imagen_url: res.data.imagen_url });
+      const res = await api.post('/vehiculos/upload', uploadData);
+      if (res.data?.imagen_url) {
+        setFormData((prev) => ({ ...prev, imagen_url: res.data.imagen_url }));
+      }
     } catch (err) {
-      alert(err.response?.data?.error || 'Error al subir la imagen');
+      URL.revokeObjectURL(localUrl);
+      setPreviewLocal('');
+      const msg = err.response?.data?.error || 'Error al subir la imagen';
+      setError(msg);
+      alert(msg);
     } finally {
       setSubiendoImagen(false);
     }
@@ -79,7 +101,7 @@ export default function CrearVehiculoPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-    
+
     try {
       if (esEdicion) {
         await api.put(`/vehiculos/${id}`, formData);
@@ -101,6 +123,8 @@ export default function CrearVehiculoPage() {
 
   if (cargando) return <div className="container py-5 text-center">Cargando...</div>;
 
+  const imagenPreview = previewLocal || formData.imagen_url;
+
   return (
     <div style={{ backgroundColor: 'var(--rc-bg)', minHeight: '100vh' }}>
       <Navbar />
@@ -109,7 +133,7 @@ export default function CrearVehiculoPage() {
           <h2 className="fw-bold mb-4" style={{ color: 'var(--rc-text)' }}>
             {esEdicion ? 'Editar Vehículo' : 'Registrar Nuevo Vehículo'}
           </h2>
-          
+
           {error && <div className="alert alert-danger">{error}</div>}
 
           <form onSubmit={handleSubmit}>
@@ -136,18 +160,17 @@ export default function CrearVehiculoPage() {
             </div>
 
             <div className="row">
-              {/* SELECTOR DE CATEGORÍA */}
               <div className="col-md-6 mb-3">
                 <label className="form-label" style={{ color: 'var(--rc-text)' }}>Categoría</label>
-                <select 
-                  name="categoria_id" 
-                  className="form-select" 
-                  value={formData.categoria_id} 
+                <select
+                  name="categoria_id"
+                  className="form-select"
+                  value={formData.categoria_id}
                   onChange={handleChange}
                   required
                 >
                   <option value="">Seleccione una categoría</option>
-                  {categorias.map(cat => (
+                  {categorias.map((cat) => (
                     <option key={cat.id} value={cat.id}>{cat.nombre}</option>
                   ))}
                 </select>
@@ -157,8 +180,6 @@ export default function CrearVehiculoPage() {
                 <input type="number" name="pasajeros" className="form-control" value={formData.pasajeros} onChange={handleChange} required />
               </div>
             </div>
-
-            {/* 👇 BLOQUE DE PRECIOS ELIMINADO */}
 
             <div className="row">
               <div className="col-md-6 mb-3">
@@ -176,24 +197,23 @@ export default function CrearVehiculoPage() {
               </div>
             </div>
 
-            {/* SUBIDA DE IMAGEN */}
             <div className="mb-4">
               <label className="form-label" style={{ color: 'var(--rc-text)' }}>Imagen del Vehículo</label>
-              <input 
-                type="file" 
+              <input
+                type="file"
                 accept="image/*"
-                className="form-control" 
-                onChange={handleImageUpload} 
+                className="form-control"
+                onChange={handleImageUpload}
                 disabled={subiendoImagen}
               />
               {subiendoImagen && <small className="text-primary d-block mt-1">Subiendo imagen...</small>}
-              
-              {formData.imagen_url && (
-                <img 
-                  src={obtenerUrlImagen(formData.imagen_url)}
-                  alt="Vista previa" 
-                  className="mt-3 rounded" 
-                  style={{ height: '100px', objectFit: 'cover' }} 
+
+              {imagenPreview && (
+                <img
+                  src={obtenerUrlImagen(imagenPreview)}
+                  alt="Vista previa"
+                  className="mt-3 rounded"
+                  style={{ height: '120px', width: '180px', objectFit: 'cover' }}
                 />
               )}
             </div>

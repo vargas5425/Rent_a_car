@@ -223,9 +223,15 @@ export default function VehiculosPage() {
                       En mantenimiento
                     </button>
                   ) : (
+                    <div className="d-flex gap-2 mt-auto"> 
+                     <Link to={`/vehiculos/${auto.id}`} className="btn btn-dark w-100 py-2 mt-auto">
+                        Detalles
+                     </Link>
                     <Link to={enlaceReservar(auto.id)} className="btn btn-dark w-100 py-2 mt-auto">
                       Reservar
                     </Link>
+                    </div>
+                    
                   )}
                 </div>
               </div>

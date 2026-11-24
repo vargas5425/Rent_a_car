@@ -1,14 +1,15 @@
 import { Op } from 'sequelize';
-import { sequelize, VehiculoModel, CategoriaModel, TarifaModel } from '../models/index.js'; // 👈 Importamos TarifaModel
+import { sequelize, VehiculoModel, CategoriaModel, TarifaModel } from '../models/index.js';
 import { ESTADOS_BLOQUEANTES } from '../../domain/reservas/Reserva.js';
 
 class VehiculoRepository {
-  async findAll() {
+  async findAll(options = {}) {
     return await VehiculoModel.findAll({
-      where: { activo: true },
+      ...options,
+      where: { activo: true, ...(options.where || {}) },
       include: [
         { model: CategoriaModel, as: 'categoria' },
-        { model: TarifaModel, as: 'tarifas' } // 👈 Incluimos las tarifas
+        { model: TarifaModel, as: 'tarifas' }
       ]
     });
   }
@@ -31,34 +32,45 @@ class VehiculoRepository {
       },
       include: [
         { model: CategoriaModel, as: 'categoria' },
-        { model: TarifaModel, as: 'tarifas' } // 👈 Incluimos las tarifas
+        { model: TarifaModel, as: 'tarifas' }
       ]
     });
   }
 
-  async findById(id) {
+  // 👇 AHORA acepta options (transaction + lock)
+  async findById(id, options = {}) {
     return await VehiculoModel.findByPk(id, {
+      ...options,
       include: [
         { model: CategoriaModel, as: 'categoria' },
-        { model: TarifaModel, as: 'tarifas' } // 👈 Incluimos las tarifas
+        { model: TarifaModel, as: 'tarifas' }
       ]
     });
   }
 
-  async create(data) {
-    return await VehiculoModel.create(data);
+  async create(data, options = {}) {
+    return await VehiculoModel.create(data, options);
   }
 
-  async update(id, data) {
-    const vehiculo = await VehiculoModel.findByPk(id);
+  // 👇 AHORA respeta la transacción
+  async update(id, data, options = {}) {
+    const vehiculo = await VehiculoModel.findByPk(id, {
+      transaction: options.transaction
+    });
     if (!vehiculo) return null;
-    return await vehiculo.update(data);
+    return await vehiculo.update(data, {
+      transaction: options.transaction
+    });
   }
 
-  async delete(id) {
-    const vehiculo = await VehiculoModel.findByPk(id);
+  async delete(id, options = {}) {
+    const vehiculo = await VehiculoModel.findByPk(id, {
+      transaction: options.transaction
+    });
     if (!vehiculo) return null;
-    return await vehiculo.update({ activo: false }); 
+    return await vehiculo.update({ activo: false }, {
+      transaction: options.transaction
+    });
   }
 }
 

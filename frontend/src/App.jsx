@@ -11,6 +11,15 @@ import NuevaReservaPage from './pages/client/NuevaReservaPage';
 import MisReservasPage from './pages/client/MisReservasPage'; 
 import DetalleReservaPage from './pages/client/DetalleReservaPage'; 
 import AdminTarifasPage from './pages/admin/AdminTarifasPage';
+import VehiculoDetallePage from './pages/client/VehiculoDetallePage';
+
+// IMPORTAMOS LAS PÁGINAS DE ALQUILERES
+import AlquileresActivosPage from './pages/employee/AlquileresActivosPage';
+import AlquileresPendientesPage from './pages/employee/AlquileresPendientesPage';
+import EntregaPage from './pages/employee/EntregaPage';
+import DevolucionPage from './pages/employee/DevolucionPage';
+import CargosAdicionalesPage from './pages/employee/CargosAdicionalesPage';
+import HistorialAlquileresPage from './pages/employee/HistorialAlquileresPage';
 
 import ProtectedRoute from './components/layout/ProtectedRoute'; 
 
@@ -23,6 +32,7 @@ function App() {
 
       {/* Rutas de Cliente */}
       <Route path="/vehiculos" element={<ProtectedRoute><VehiculosPage /></ProtectedRoute>} />
+      <Route path="/vehiculos/:id" element={<ProtectedRoute><VehiculoDetallePage /></ProtectedRoute>} />
       
       {/* RUTA: Formulario de reserva */}
       <Route path="/vehiculos/:id/reservar" element={<ProtectedRoute><NuevaReservaPage /></ProtectedRoute>} />
@@ -34,6 +44,32 @@ function App() {
       <Route path="/dashboard" element={<ProtectedRoute allowedRoles={['ADMINISTRADOR', 'EMPLEADO']}><DashboardPage /></ProtectedRoute>} />
       <Route path="/dashboard/reservas" element={<ProtectedRoute allowedRoles={['ADMINISTRADOR', 'EMPLEADO']}><GestionReservasPage /></ProtectedRoute>} />
       
+      {/* RUTAS DE ALQUILERES, ENTREGAS Y DEVOLUCIONES */}
+      <Route 
+        path="/dashboard/alquileres-pendientes" 
+        element={<ProtectedRoute allowedRoles={['ADMINISTRADOR', 'EMPLEADO']}><AlquileresPendientesPage /></ProtectedRoute>} 
+      />
+      <Route 
+        path="/dashboard/alquileres-activos" 
+        element={<ProtectedRoute allowedRoles={['ADMINISTRADOR', 'EMPLEADO']}><AlquileresActivosPage /></ProtectedRoute>} 
+      />
+      <Route 
+        path="/dashboard/alquileres/:id/entrega" 
+        element={<ProtectedRoute allowedRoles={['ADMINISTRADOR', 'EMPLEADO']}><EntregaPage /></ProtectedRoute>} 
+      />
+      <Route 
+        path="/dashboard/alquileres/:id/devolucion" 
+        element={<ProtectedRoute allowedRoles={['ADMINISTRADOR', 'EMPLEADO']}><DevolucionPage /></ProtectedRoute>} 
+      />
+      <Route 
+        path="/dashboard/alquileres/:id/cargos-adicionales" 
+        element={<ProtectedRoute allowedRoles={['ADMINISTRADOR', 'EMPLEADO']}><CargosAdicionalesPage /></ProtectedRoute>} 
+      />
+      <Route 
+        path="/dashboard/alquileres-historial" 
+        element={<ProtectedRoute allowedRoles={['ADMINISTRADOR', 'EMPLEADO']}><HistorialAlquileresPage /></ProtectedRoute>} 
+      />
+
       {/* Rutas solo Admin */}
       <Route path="/vehiculos/crear" element={<ProtectedRoute allowedRoles={['ADMINISTRADOR']}><CrearVehiculoPage /></ProtectedRoute>} />
       <Route path="/dashboard/admin/vehiculos/:id/editar" 

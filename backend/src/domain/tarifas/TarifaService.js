@@ -1,4 +1,6 @@
-// 👇 EL DOMINIO YA NO IMPORTA EL REPOSITORIO. Es 100% puro.
+// backend/src/domain/tarifas/TarifaService.js
+
+// 👇 EL DOMINIO ES 100% PURO (Sin base de datos, sin Express, solo reglas de negocio)
 
 export function calcularPrecio(duracionEnHoras, modalidad, precioBase) {
   if (duracionEnHoras <= 0) throw new Error('La duración debe ser mayor a 0');
@@ -15,7 +17,6 @@ export function calcularPrecio(duracionEnHoras, modalidad, precioBase) {
   return unidadesACobrar * precioBase;
 }
 
-// 👇 Ahora recibe el repositorio como parámetro (Inyección de Dependencias)
 export async function calcularPrecioReserva(vehiculo, duracionEnHoras, modalidad, tarifaRepo) {
   const tarifasVehiculo = await tarifaRepo.buscarPorVehiculo(vehiculo.id);
   const tarifaVehiculo = tarifasVehiculo.find(t => t.modalidad === modalidad);
@@ -34,25 +35,6 @@ export async function calcularPrecioReserva(vehiculo, duracionEnHoras, modalidad
   throw new Error('No hay tarifa configurada para este vehículo ni para su categoría');
 }
 
-export function calcularCargoRetraso(horasDeRetraso, precioHora) {
-  if (horasDeRetraso <= 0) return 0;
-  return Math.ceil(horasDeRetraso) * precioHora;
-}
-
-export function calcularCargoCombustible(nivelSalida, nivelLlegada) {
-  const niveles = { 'VACIO': 0, '1/4': 1, '1/2': 2, '3/4': 3, 'LLENO': 4 };
-  
-  const salida = niveles[nivelSalida];
-  const llegada = niveles[nivelLlegada];
-
-  if (salida === undefined || llegada === undefined) throw new Error('Nivel de combustible inválido');
-  if (llegada >= salida) return 0;
-
-  const cuartosFaltantes = salida - llegada;
-  return cuartosFaltantes * 50;
-}
-
-// Snapshot también recibe el repositorio
 export async function generarSnapshotTarifa(vehiculo, duracionEnHoras, modalidad, tarifaRepo) {
   const tarifasVehiculo = await tarifaRepo.buscarPorVehiculo(vehiculo.id);
   let tarifaAplicada = tarifasVehiculo.find(t => t.modalidad === modalidad);
@@ -75,4 +57,80 @@ export async function generarSnapshotTarifa(vehiculo, duracionEnHoras, modalidad
     duracion_cobrada: duracionEnHoras,
     precio_total_calculado: precioTotal
   };
+}
+
+// ---------------------------------------------------------------------------
+// 👇 NUEVAS REGLAS DE NEGOCIO (Migradas de tu compañero a Dominio)
+// ---------------------------------------------------------------------------
+
+/**
+ * Calcula el cargo por retraso en la devolución.
+ * Modalidades: HORA (1h), DIA (24h), SEMANA (168h), MES (720h).
+ * Cada hora iniciada se cobra completa.
+ */
+export function calcularCargoRetraso({
+  fecha_fin,
+  fecha_devolucion,
+  modalidad,
+  precio_unitario,
+  tarifa_diaria
+}) {
+  const fechaLimite = new Date(fecha_fin);
+  const fechaReal = new Date(fecha_devolucion);
+
+  if (!Number.isFinite(fechaLimite.getTime()) || !Number.isFinite(fechaReal.getTime())) {
+    throw new Error('Las fechas de devolución no son válidas');
+  }
+
+  // Compatibilidad con alquileres antiguos que solo tienen tarifa_diaria.
+  const modalidadAplicada = modalidad || 'DIA';
+  const precioAplicado = precio_unitario != null ? Number(precio_unitario) : Number(tarifa_diaria);
+
+  const horasPorModalidad = { HORA: 1, DIA: 24, SEMANA: 168, MES: 720 };
+  const horasUnidad = horasPorModalidad[modalidadAplicada];
+
+  if (!horasUnidad) throw new Error('La modalidad del alquiler no es válida');
+  if ((precio_unitario == null && tarifa_diaria == null) || !Number.isFinite(precioAplicado) || precioAplicado < 0) {
+    throw new Error('El precio del alquiler no es válido');
+  }
+
+  const diferencia = fechaReal.getTime() - fechaLimite.getTime();
+  if (diferencia <= 0) return { horas_retraso: 0, monto: 0 };
+
+  const horasRetraso = Math.ceil(diferencia / (1000 * 60 * 60));
+  
+  // Cálculo en centavos para evitar problemas de coma flotante
+  const precioCentavos = Math.round(precioAplicado * 100);
+  const montoCentavos = Math.round((precioCentavos * horasRetraso) / horasUnidad);
+
+  return { horas_retraso: horasRetraso, monto: montoCentavos / 100 };
+}
+
+/**
+ * Calcula el cargo por combustible faltante usando porcentajes (0-100).
+ * Regla: Bs 50 por cada 25% faltante. Fracciones se redondean hacia arriba.
+ */
+export function calcularCargoCombustible({ combustible_inicial, combustible_final }) {
+  const inicial = Number(combustible_inicial);
+  const final = Number(combustible_final);
+
+  if (
+    combustible_inicial === null || combustible_inicial === undefined || combustible_inicial === '' ||
+    combustible_final === null || combustible_final === undefined || combustible_final === '' ||
+    !Number.isInteger(inicial) || !Number.isInteger(final) ||
+    inicial < 0 || inicial > 100 || final < 0 || final > 100
+  ) {
+    throw new Error('Los niveles de combustible deben estar entre 0 y 100');
+  }
+
+  const combustibleFaltante = Math.max(0, inicial - final);
+
+  if (combustibleFaltante === 0) {
+    return { combustible_faltante: 0, bloques_cobrados: 0, monto: 0 };
+  }
+
+  const bloquesCobrados = Math.ceil(combustibleFaltante / 25);
+  const monto = bloquesCobrados * 50;
+
+  return { combustible_faltante: combustibleFaltante, bloques_cobrados: bloquesCobrados, monto };
 }

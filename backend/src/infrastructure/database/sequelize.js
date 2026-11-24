@@ -3,8 +3,11 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
+// 👇 Lógica para elegir la base de datos según el entorno
+const dbName = process.env.NODE_ENV === 'test' ? 'rentacar_test' : process.env.DB_NAME;
+
 const sequelize = new Sequelize(
-  process.env.DB_NAME || 'rentacar',
+  dbName || 'rentacar',
   process.env.DB_USER || 'rentacar',
   process.env.DB_PASSWORD || 'rentacar',
   {

@@ -176,7 +176,7 @@ export default function NuevaReservaPage() {
                   <div className="col-md-6 mb-3">
                     <label className="form-label fw-semibold" style={{ color: 'var(--rc-text)' }}>Devolución</label>
                     <input
-                      type="date"
+                      type="datetime-local"
                       className="form-control"
                       value={fin}
                       min={inicio || minFecha}

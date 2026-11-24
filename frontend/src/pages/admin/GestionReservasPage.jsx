@@ -3,7 +3,9 @@ import { Link } from 'react-router-dom';
 import {
   listarTodasLasReservas,
   confirmarReserva,
-  cancelarReserva
+  cancelarReserva,
+  finalizarReserva,
+  crearAlquilerDesdeReserva
 } from '../../services/reservasService';
 import { ESTADOS_RESERVA, ETIQUETA_ESTADO, formatearFecha, formatearBs, puedeCancelar } from '../../utils/reservas';
 import EstadoBadge from '../../components/reservas/EstadoBadge';
@@ -15,36 +17,83 @@ export default function GestionReservasPage() {
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState('');
   const [recarga, setRecarga] = useState(0);
+  const [accionEnCurso, setAccionEnCurso] = useState(null);
 
   useEffect(() => {
     let isMounted = true;
+
     const cargar = async () => {
+      setCargando(true);
+      setError('');
+
       try {
         const datos = await listarTodasLasReservas();
         if (isMounted) setReservas(datos);
       } catch (err) {
-        if (isMounted) setError(err.response?.data?.error || 'Error al cargar las reservas.');
+        if (isMounted) {
+          setError(
+            err.response?.data?.error ||
+            err.response?.data?.mensaje ||
+            'No se pudieron cargar las reservas.'
+          );
+        }
       } finally {
         if (isMounted) setCargando(false);
       }
     };
+
     cargar();
+
     return () => { isMounted = false; };
   }, [recarga]);
 
   const ejecutar = async (accion, id, mensajeError) => {
+    if (accionEnCurso !== null) return;
+
+    setAccionEnCurso(id);
+    setError('');
+
     try {
       await accion(id);
-      setError('');
       setRecarga((n) => n + 1);
     } catch (err) {
-      setError(err.response?.data?.error || mensajeError);
+      setError(
+        err.response?.data?.error ||
+        err.response?.data?.mensaje ||
+        mensajeError
+      );
+    } finally {
+      setAccionEnCurso(null);
+    }
+  };
+
+  const handleCrearAlquiler = async (reservaId) => {
+    const confirmar = window.confirm(`¿Deseas crear un alquiler para la reserva #${reservaId}?`);
+    if (!confirmar) return;
+
+    try {
+      setError('');
+      const alquiler = await crearAlquilerDesdeReserva(reservaId);
+      window.alert(`Alquiler #${alquiler.id} creado correctamente. Ya está pendiente de entrega.`);
+      setRecarga((n) => n + 1);
+    } catch (err) {
+      setError(
+        err.response?.data?.error ||
+        err.response?.data?.mensaje ||
+        'No se pudo crear el alquiler.'
+      );
     }
   };
 
   const handleCancelar = (id) => {
     if (window.confirm('¿Seguro que deseas cancelar esta reserva?')) {
       ejecutar(cancelarReserva, id, 'No se pudo cancelar la reserva.');
+    }
+  };
+
+  const handleFinalizar = (id) => {
+    if (window.confirm('¿Confirmas finalizar esta reserva?')) {
+      ejecutar(finalizarReserva, id, 'No se pudo finalizar la reserva.');
     }
   };
 
@@ -59,7 +108,7 @@ export default function GestionReservasPage() {
             <Link to="/dashboard" className="text-decoration-none text-muted">← Volver al Dashboard</Link>
             <h2 className="fw-bold mb-0" style={{ color: 'var(--rc-text)' }}>Gestión de Reservas</h2>
           </div>
-          
+
           <select
             className="form-select w-auto"
             value={filtro}
@@ -90,12 +139,13 @@ export default function GestionReservasPage() {
                 <th className="text-center">Acciones</th>
               </tr>
             </thead>
+
             <tbody>
-              {!cargando && visibles.length === 0 ? (
+              {!cargando && !error && visibles.length === 0 ? (
                 <tr>
                   <td colSpan="8" className="text-center py-4 text-muted">No hay reservas para mostrar.</td>
                 </tr>
-              ) : (
+              ) : !cargando && !error ? (
                 visibles.map((r) => (
                   <tr key={r.id}>
                     <td><strong>{r.id}</strong></td>
@@ -107,20 +157,51 @@ export default function GestionReservasPage() {
                     <td><EstadoBadge estado={r.estado} /></td>
                     <td className="text-center text-nowrap">
                       <Link to={`/reservas/${r.id}`} className="btn btn-sm btn-outline-dark me-2">Ver</Link>
+
                       {r.estado === 'RESERVADA' && (
-                        <button className="btn btn-sm btn-dark me-2" onClick={() => ejecutar(confirmarReserva, r.id, 'Error al confirmar')}>
-                          Confirmar
+                        <button
+                          className="btn btn-sm btn-dark me-2"
+                          onClick={() => ejecutar(confirmarReserva, r.id, 'No se pudo confirmar la reserva.')}
+                          disabled={accionEnCurso !== null}
+                        >
+                          {accionEnCurso === r.id ? 'Procesando...' : 'Confirmar'}
                         </button>
                       )}
+
+                      {r.estado === 'CONFIRMADA' && (
+                        <button
+                          type="button"
+                          className="btn btn-sm btn-primary me-2"
+                          onClick={() => handleCrearAlquiler(r.id)}
+                        >
+                          Crear alquiler
+                        </button>
+                      )}
+
+                      {r.estado === 'DEVUELTA' && (
+                        <button
+                          type="button"
+                          className="btn btn-sm btn-success me-2"
+                          onClick={() => handleFinalizar(r.id)}
+                          disabled={accionEnCurso !== null}
+                        >
+                          {accionEnCurso === r.id ? 'Finalizando...' : 'Finalizar'}
+                        </button>
+                      )}
+
                       {puedeCancelar(r.estado) && (
-                        <button className="btn btn-sm btn-outline-danger" onClick={() => handleCancelar(r.id)}>
-                          Cancelar
+                        <button
+                          className="btn btn-sm btn-outline-danger"
+                          onClick={() => handleCancelar(r.id)}
+                          disabled={accionEnCurso !== null}
+                        >
+                          {accionEnCurso === r.id ? 'Procesando...' : 'Cancelar'}
                         </button>
                       )}
                     </td>
                   </tr>
                 ))
-              )}
+              ) : null}
             </tbody>
           </table>
         </div>

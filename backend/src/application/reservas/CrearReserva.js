@@ -14,24 +14,34 @@ export function construirCrearReserva({ reservaRepo, vehiculoRepo }) {
     }
     validarNuevaReserva({ fechaInicio, fechaFin, modalidad });
 
+    const inicioDate = new Date(fechaInicio);
+    const finDate = new Date(fechaFin);
+    const horas = (finDate.getTime() - inicioDate.getTime()) / (1000 * 60 * 60);
+
+    if (!Number.isFinite(horas) || horas <= 0) {
+      throw errorValidacion('El intervalo de fechas y horas no es válido');
+    }
+
     const vehiculo = await vehiculoRepo.findById(Number(vehiculoId));
     validarVehiculoReservable(vehiculo);
 
-    // 1. Calcular la duración en horas
-    const horas = (new Date(fechaFin).getTime() - new Date(fechaInicio).getTime()) / (1000 * 60 * 60);
-
-    // 2. Usar el TarifaService para calcular el precio (Prioridad: Vehículo > Categoría)
     const snapshot = await generarSnapshotTarifa(vehiculo, horas, modalidad, TarifaRepository);
 
-    // 3. Crear la reserva con el total calculado
+    const precioUnitario = Number(snapshot.precio_unitario_al_momento);
+    const precioTotal = Number(snapshot.precio_total_calculado);
+
+    if (!Number.isFinite(precioUnitario) || precioUnitario < 0 || !Number.isFinite(precioTotal) || precioTotal < 0) {
+      throw errorValidacion('El cálculo de tarifa no puede generar montos negativos');
+    }
+
     const reserva = await reservaRepo.crearSiDisponible({
       usuario_id: Number(usuarioId),
       vehiculo_id: vehiculo.id,
-      fecha_inicio: new Date(fechaInicio),
-      fecha_fin: new Date(fechaFin),
+      fecha_inicio: inicioDate,
+      fecha_fin: finDate,
       modalidad,
-      precio_unitario: snapshot.precio_unitario_al_momento,
-      total: snapshot.precio_total_calculado,
+      precio_unitario: precioUnitario,
+      total: precioTotal,
       estado: ESTADOS.RESERVADA
     });
 

@@ -53,8 +53,6 @@ export default function Navbar() {
                 <>
                   <Link to="/vehiculos" className="nav-link-custom">List Cars</Link>
                   <Link to="/dashboard" className="nav-link-custom">Dashboard</Link>
-                  {/* ENLACE AGREGADO PARA EL STAFF */}
-                  <Link to="/dashboard/reservas" className="nav-link-custom">Gestión Reservas</Link>
                 </>
               )}
               

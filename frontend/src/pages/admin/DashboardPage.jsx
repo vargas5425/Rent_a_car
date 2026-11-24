@@ -9,6 +9,8 @@ export default function DashboardPage() {
   const { usuario } = useAuth();
   if (!usuario) return null;
 
+  const esAdmin = usuario.rol === 'ADMINISTRADOR';
+
   return (
     <div className="dashboard-page">
       <Navbar />
@@ -21,23 +23,25 @@ export default function DashboardPage() {
         </div>
 
         <div className="row g-4">
-          {/* Card: Inventario */}
-          <div className="col-md-4">
-            <div className="card p-4 dashboard-card">
-              <div className="d-flex justify-content-between align-items-center mb-3">
-                <div className="rounded-circle d-flex align-items-center justify-content-center dashboard-icon dashboard-icon--info">
+          {/* Card: Inventario (solo admin) */}
+          {esAdmin && (
+            <div className="col-md-4">
+              <div className="card p-4 dashboard-card">
+                <div className="d-flex justify-content-between align-items-center mb-3">
+                  <div className="rounded-circle d-flex align-items-center justify-content-center dashboard-icon dashboard-icon--info">
                     <img src={vehiculo} alt="vehiculos" />
+                  </div>
                 </div>
+                <h4 className="fw-bold mb-1 dashboard-card-title" style={{ color: 'var(--rc-text)' }}>Inventario</h4>
+                <p className="mb-4 dashboard-card-text">
+                  Gestiona los vehículos, añade autos nuevos y controla sus estados.
+                </p>
+                <Link to="/dashboard/admin/vehiculos" className="btn btn-dark w-100 mt-auto">
+                  Ir a Vehículos
+                </Link>
               </div>
-              <h4 className="fw-bold mb-1 dashboard-card-title" style={{ color: 'var(--rc-text)' }}>Inventario</h4>
-              <p className="mb-4 dashboard-card-text">
-                Gestiona los vehículos, añade autos nuevos y controla sus estados.
-              </p>
-              <Link to="/dashboard/admin/vehiculos" className="btn btn-dark w-100 mt-auto">
-                Ir a Vehículos
-              </Link>
             </div>
-          </div>
+          )}
 
           {/* Card: Reservas */}
           <div className="col-md-4">
@@ -57,8 +61,77 @@ export default function DashboardPage() {
             </div>
           </div>
 
+          {/* Card: Alquileres pendientes */}
+          <div className="col-md-4">
+            <div className="card p-4 dashboard-card">
+              <div className="d-flex justify-content-between align-items-center mb-3">
+                <div
+                  className="rounded-circle d-flex align-items-center justify-content-center dashboard-icon dashboard-icon--warning"
+                  style={{ backgroundColor: 'rgba(255, 193, 7, 0.1)', width: '50px', height: '50px', fontSize: '24px' }}
+                >
+                  🚗
+                </div>
+              </div>
+              <h4 className="fw-bold mb-1 dashboard-card-title" style={{ color: 'var(--rc-text)' }}>
+                Alquileres pendientes
+              </h4>
+              <p className="mb-4 dashboard-card-text">
+                Consulta los alquileres pendientes y registra la entrega de vehículos a los clientes.
+              </p>
+              <Link to="/dashboard/alquileres-pendientes" className="btn btn-dark w-100 mt-auto">
+                Gestionar entregas
+              </Link>
+            </div>
+          </div>
+
+          {/* Card: Alquileres activos */}
+          <div className="col-md-4">
+            <div className="card p-4 dashboard-card">
+              <div className="d-flex justify-content-between align-items-center mb-3">
+                <div
+                  className="rounded-circle d-flex align-items-center justify-content-center dashboard-icon dashboard-icon--success"
+                  style={{ backgroundColor: 'rgba(25, 135, 84, 0.12)', width: '50px', height: '50px', fontSize: '24px' }}
+                >
+                  🔑
+                </div>
+              </div>
+              <h4 className="fw-bold mb-1 dashboard-card-title" style={{ color: 'var(--rc-text)' }}>
+                Alquileres activos
+              </h4>
+              <p className="mb-4 dashboard-card-text">
+                Revisa los vehículos actualmente entregados y registra su devolución al finalizar.
+              </p>
+              <Link to="/dashboard/alquileres-activos" className="btn btn-dark w-100 mt-auto">
+                Gestionar devoluciones
+              </Link>
+            </div>
+          </div>
+
+          {/* Card: Historial de alquileres */}
+          <div className="col-md-4">
+            <div className="card p-4 dashboard-card">
+              <div className="d-flex justify-content-between align-items-center mb-3">
+                <div
+                  className="rounded-circle d-flex align-items-center justify-content-center dashboard-icon dashboard-icon--info"
+                  style={{ backgroundColor: 'rgba(13, 110, 253, 0.12)', width: '50px', height: '50px', fontSize: '24px' }}
+                >
+                  📜
+                </div>
+              </div>
+              <h4 className="fw-bold mb-1 dashboard-card-title" style={{ color: 'var(--rc-text)' }}>
+                Historial de alquileres
+              </h4>
+              <p className="mb-4 dashboard-card-text">
+                Consulta alquileres finalizados, kilometrajes, observaciones y cargos adicionales.
+              </p>
+              <Link to="/dashboard/alquileres-historial" className="btn btn-dark w-100 mt-auto">
+                Ver historial
+              </Link>
+            </div>
+          </div>
+
           {/* Card: Tarifas (solo ADMINISTRADOR) */}
-          {usuario.rol === 'ADMINISTRADOR' && (
+          {esAdmin && (
             <div className="col-md-4">
               <div className="card p-4 dashboard-card">
                 <div className="d-flex justify-content-between align-items-center mb-3">
@@ -78,7 +151,7 @@ export default function DashboardPage() {
           )}
 
           {/* Card: Usuarios (solo ADMINISTRADOR) */}
-          {usuario.rol === 'ADMINISTRADOR' && (
+          {esAdmin && (
             <div className="col-md-4">
               <div className="card p-4 dashboard-card">
                 <div className="d-flex justify-content-between align-items-center mb-3">
