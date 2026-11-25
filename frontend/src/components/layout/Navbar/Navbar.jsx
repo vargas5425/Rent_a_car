@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, startTransition } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../context/useAuth';
 import ThemeToggle from './ThemeToggle';
@@ -10,7 +10,6 @@ export default function Navbar() {
   const navigate = useNavigate();
   const [scrolled, setScrolled] = useState(false);
 
-  // Efecto para que el navbar cambie al hacer scroll
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 40);
     window.addEventListener('scroll', handleScroll);
@@ -18,15 +17,16 @@ export default function Navbar() {
   }, []);
 
   const handleLogout = () => {
-    logout();
-    navigate('/');
+    startTransition(() => {
+      navigate('/');
+      logout();
+    });
   };
 
   return (
     <nav className={`navbar-custom ${scrolled ? 'rc-navbar--scrolled' : ''}`}>
       <div className="navbar-container">
         
-        {/* LOGO Y MARCA */}
         <Link to="/" className="navbar-brand">
           <img src={logo} alt="Tierra Camba" className="brand-logo" />
           <span className="brand-name">
@@ -34,7 +34,6 @@ export default function Navbar() {
           </span>
         </Link>
 
-        {/* ENLACES Y BOTONES */}
         <div className="navbar-links">
           {usuario ? (
             <>
@@ -43,7 +42,6 @@ export default function Navbar() {
                   <Link to="/vehiculos" className="nav-link-custom">
                     List Cars
                   </Link>
-                  {/* ENLACE AGREGADO PARA EL CLIENTE */}
                   <Link to="/mis-reservas" className="nav-link-custom">
                     Mis Reservas
                   </Link>
@@ -68,7 +66,6 @@ export default function Navbar() {
             </div>
           )}
 
-          {/* El botón mágico de Work/Sleep */}
           <ThemeToggle />
         </div>
       </div>

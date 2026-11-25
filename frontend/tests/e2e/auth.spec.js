@@ -1,41 +1,73 @@
 import { test, expect } from '@playwright/test';
+import { ADMIN, EMPLEADO, sufijoUnico, crearCliente } from './helpers/datos.js';
+import { iniciarSesion, aceptarDialogos } from './helpers/sesion.js';
 
-test.describe('E2E 01: Flujo completo de Registro y Login', () => {
+test.describe('Autenticación y roles', () => {
+  test('registro e inicio de sesión de un cliente nuevo', async ({ page }) => {
+    const email = `autotest_${sufijoUnico().toLowerCase()}@tierracamba.com`;
+    const password = 'Password123*';
+    const mensajes = aceptarDialogos(page);
 
-  const uniqueEmail = `autotest_${Date.now()}@tierracamba.com`;
-  const password = 'Password123*';
-
-  test('Debe permitir registrarse y posteriormente iniciar sesión de forma exitosa', async ({ page }) => {
-    // 1. Ir a la página de registro desde la landing
     await page.goto('/');
-    await page.locator('a.btn-register, a[href="/register"]').first().click();
-    await expect(page).toHaveURL(/.*\/register/);
+    await page.locator('.btn-register').click();
+    await expect(page).toHaveURL(/\/register$/);
 
-    // 2. Llenar formulario de registro
     await page.fill('input[name="nombre"]', 'Usuario Automatizado');
-    await page.fill('input[name="email"]', uniqueEmail);
+    await page.fill('input[name="email"]', email);
     await page.fill('input[name="password"]', password);
-
-    // 👇 CONFIGURACIÓN DEL ALERT (Debe ir ANTES del clic)
-    page.on('dialog', async dialog => {
-      // Verificamos que el mensaje sea el de éxito
-      expect(dialog.message()).toContain('Registro exitoso');
-      // Aceptamos el alert (equivale a hacer clic en "OK")
-      await dialog.accept();
-    });
-
-    // 3. Enviar formulario
     await page.click('button[type="submit"]');
 
-    // 4. Verificar redirección al Login (Le damos 10s de margen)
-    await expect(page).toHaveURL(/.*\/login/, { timeout: 10000 });
+    await expect(page).toHaveURL(/\/login$/);
+    expect(mensajes.join(' ')).toContain('Registro exitoso');
 
-    // 5. Llenar el formulario de Login
-    await page.fill('input[type="email"]', uniqueEmail);
+    await page.fill('input[type="email"]', email);
     await page.fill('input[type="password"]', password);
     await page.click('button[type="submit"]');
+    await expect(page).toHaveURL(/\/vehiculos$/);
+  });
 
-    // 6. Verificar que ingresó al sistema (redirige a /vehiculos para clientes)
-    await expect(page).toHaveURL(/.*\/vehiculos/);
+  test('no permite registrar un correo repetido', async ({ page, request }) => {
+    const cliente = await crearCliente(request);
+
+    await page.goto('/register');
+    await page.fill('input[name="nombre"]', 'Repetido');
+    await page.fill('input[name="email"]', cliente.email);
+    await page.fill('input[name="password"]', 'Password123*');
+    await page.click('button[type="submit"]');
+
+    await expect(page.locator('.alert-danger')).toContainText('ya está registrado');
+    await expect(page).toHaveURL(/\/register$/);
+  });
+
+  test('muestra error con una contraseña incorrecta', async ({ page }) => {
+    await page.goto('/login');
+    await page.fill('input[type="email"]', ADMIN.email);
+    await page.fill('input[type="password"]', 'incorrecta');
+    await page.click('button[type="submit"]');
+
+    await expect(page.locator('.alert-danger')).toContainText('Credenciales inválidas');
+    await expect(page).toHaveURL(/\/login$/);
+  });
+
+  test('administrador y empleado entran al dashboard con sus opciones', async ({ page }) => {
+    await iniciarSesion(page, ADMIN);
+    await expect(page).toHaveURL(/\/dashboard$/);
+    await expect(page.getByRole('link', { name: 'Gestionar Tarifas' })).toBeVisible();
+
+    await iniciarSesion(page, EMPLEADO);
+    await expect(page).toHaveURL(/\/dashboard$/);
+    await expect(page.getByRole('link', { name: 'Ir a Reservas' })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Gestionar Tarifas' })).toHaveCount(0);
+  });
+
+  test('cerrar sesión protege las rutas privadas', async ({ page, request }) => {
+    const cliente = await crearCliente(request);
+    await iniciarSesion(page, cliente);
+
+    await page.locator('.btn-logout').click();
+    await expect.poll(() => page.evaluate(() => localStorage.getItem('token'))).toBeNull();
+
+    await page.goto('/mis-reservas');
+    await expect(page).toHaveURL(/\/login$/);
   });
 });

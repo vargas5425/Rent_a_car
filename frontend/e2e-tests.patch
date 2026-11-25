@@ -1,0 +1,948 @@
+From cbebfb34b8b6e106003018600705d9a1414affda Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Wed, 25 Nov 2026 07:45:25 -0400
+Subject: [PATCH] test(e2e): agregar pruebas end-to-end del frontend
+
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_017GB6Qd7dMgYScFbMTY2zT2
+---
+ frontend/playwright.config.js             |  25 +++--
+ frontend/tests/e2e/alquiler.spec.js       | 109 ++++++++++++++++++++
+ frontend/tests/e2e/auth.spec.js           |  84 ++++++++++-----
+ frontend/tests/e2e/disponibilidad.spec.js | 105 +++++++++++++++++++
+ frontend/tests/e2e/helpers/datos.js       | 119 ++++++++++++++++++++++
+ frontend/tests/e2e/helpers/sesion.js      |  20 ++++
+ frontend/tests/e2e/landing.spec.js        | 101 +++++-------------
+ frontend/tests/e2e/reservas.spec.js       |  93 +++++++++++++++++
+ frontend/tests/e2e/tarifas.spec.js        |  40 ++++++++
+ frontend/tests/e2e/vehiculos.spec.js      |  85 ++++++++--------
+ frontend/vite.config.js                   |   3 +
+ 11 files changed, 630 insertions(+), 154 deletions(-)
+ create mode 100644 frontend/tests/e2e/alquiler.spec.js
+ create mode 100644 frontend/tests/e2e/disponibilidad.spec.js
+ create mode 100644 frontend/tests/e2e/helpers/datos.js
+ create mode 100644 frontend/tests/e2e/helpers/sesion.js
+ create mode 100644 frontend/tests/e2e/reservas.spec.js
+ create mode 100644 frontend/tests/e2e/tarifas.spec.js
+
+diff --git a/frontend/playwright.config.js b/frontend/playwright.config.js
+index 5ffb3a7..af3900e 100644
+--- a/frontend/playwright.config.js
++++ b/frontend/playwright.config.js
+@@ -1,16 +1,23 @@
++import { existsSync } from 'node:fs';
+ import { defineConfig } from '@playwright/test';
+ 
++const chromiumDelSistema = ['/usr/bin/chromium', '/usr/bin/chromium-browser'].find((ruta) => existsSync(ruta));
++
+ export default defineConfig({
+   testDir: './tests/e2e',
+-  timeout: 30000,
++  timeout: 60000,
++  expect: { timeout: 10000 },
++  workers: 1,
++  reporter: [['list'], ['html', { open: 'never' }]],
+   use: {
+-    baseURL: 'http://localhost:5173',
++    baseURL: process.env.E2E_BASE_URL || 'http://localhost:5173',
+     headless: true,
+     viewport: { width: 1280, height: 720 },
+-    // 👇 Usamos el Chromium del sistema
+-    launchOptions: {
+-      executablePath: '/usr/bin/chromium',
+-      args: ['--no-sandbox', '--disable-setuid-sandbox']
+-    }
+-  },
+-});
+\ No newline at end of file
++    locale: 'es-BO',
++    screenshot: 'only-on-failure',
++    trace: 'retain-on-failure',
++    launchOptions: chromiumDelSistema
++      ? { executablePath: chromiumDelSistema, args: ['--no-sandbox', '--disable-setuid-sandbox'] }
++      : {}
++  }
++});
+diff --git a/frontend/tests/e2e/alquiler.spec.js b/frontend/tests/e2e/alquiler.spec.js
+new file mode 100644
+index 0000000..acd74ad
+--- /dev/null
++++ b/frontend/tests/e2e/alquiler.spec.js
+@@ -0,0 +1,109 @@
++import { test, expect } from '@playwright/test';
++import {
++  EMPLEADO,
++  crearCliente,
++  crearVehiculo,
++  eliminarVehiculo,
++  crearReserva,
++  sumarHoras
++} from './helpers/datos.js';
++import { iniciarSesion, aceptarDialogos } from './helpers/sesion.js';
++
++test.describe('Flujo completo de alquiler', () => {
++  let cliente;
++  let vehiculo;
++
++  test.beforeAll(async ({ request }) => {
++    cliente = await crearCliente(request);
++    vehiculo = await crearVehiculo(request);
++  });
++
++  test.afterAll(async ({ request }) => {
++    await eliminarVehiculo(request, vehiculo);
++  });
++
++  test('confirmar, entregar, devolver, cobrar y finalizar', async ({ page, request }) => {
++    test.setTimeout(120000);
++    const inicio = new Date(Date.now() + 5000);
++    const reserva = await crearReserva(request, cliente, vehiculo, inicio, sumarHoras(inicio, 2));
++    const mensajes = aceptarDialogos(page);
++    const filaReserva = page.locator('tbody tr').filter({
++      has: page.locator(`a[href="/reservas/${reserva.id}"]`)
++    });
++    const filaAlquiler = page.locator('tbody tr').filter({ hasText: vehiculo.placa });
++    let alquilerId;
++
++    await iniciarSesion(page, EMPLEADO);
++
++    await test.step('confirmar la reserva y crear el alquiler', async () => {
++      await page.goto('/dashboard/reservas');
++      await filaReserva.getByRole('button', { name: 'Confirmar' }).click();
++      await filaReserva.getByRole('button', { name: 'Crear alquiler' }).click();
++      await expect.poll(() => mensajes.join(' ')).toContain('creado correctamente');
++    });
++
++    await test.step('registrar la entrega', async () => {
++      await page.waitForTimeout(Math.max(0, inicio.getTime() + 2000 - Date.now()));
++      await page.goto('/dashboard/alquileres-pendientes');
++      await filaAlquiler.getByRole('button', { name: 'Registrar entrega' }).click();
++      await expect(page).toHaveURL(/\/alquileres\/\d+\/entrega$/);
++      alquilerId = page.url().match(/alquileres\/(\d+)\//)[1];
++
++      await page.locator('#kilometrajeInicial').fill('1000');
++      await page.locator('#combustibleInicial').fill('100');
++      await page.locator('#observacionesEntrega').fill('Entrega E2E sin daños');
++      await page.getByRole('button', { name: 'Registrar entrega' }).click();
++
++      await expect(page).toHaveURL(/\/dashboard\/alquileres-activos$/);
++      await expect(filaAlquiler).toContainText('ACTIVO');
++    });
++
++    await test.step('registrar la devolución con cargos', async () => {
++      await filaAlquiler.getByRole('button', { name: 'Registrar devolución' }).click();
++
++      await page.locator('input[name="kilometraje_final"]').fill('1150');
++      await page.locator('input[name="combustible_final"]').fill('75');
++      await page.locator('textarea[name="observaciones_devolucion"]').fill('Rayón en la puerta');
++      await page.getByPlaceholder('Ej. Rayón en puerta').fill('Rayón en puerta');
++      await page.getByPlaceholder('0.00').fill('25');
++      await page.getByRole('button', { name: 'Agregar' }).click();
++      await page.getByRole('button', { name: 'Confirmar devolución y calcular total' }).click();
++
++      await expect(page.getByText('Devolución registrada correctamente')).toBeVisible();
++      await expect(page.getByText('Estado del vehículo: DISPONIBLE')).toBeVisible();
++      await expect(page.getByText('Combustible faltante: 25% (Cargo: Bs 50.00)')).toBeVisible();
++      await expect(page.getByText('Rayón en puerta: Bs 25.00')).toBeVisible();
++      await expect(page.getByText('Bs 155.00')).toBeVisible();
++    });
++
++    await test.step('pagar el saldo en dos partes sin excederlo', async () => {
++      await page.goto(`/dashboard/alquileres/${alquilerId}/pagos`);
++      const monto = page.locator('form input[type="number"]');
++      const pagar = page.getByRole('button', { name: 'Registrar pago' });
++      await expect(monto).toHaveValue('155.00');
++
++      await monto.fill('100');
++      await pagar.click();
++      await expect(page.getByText('Pagos registrados (1)')).toBeVisible();
++      await expect(monto).toHaveValue('55.00');
++
++      await monto.fill('100');
++      await pagar.click();
++      await expect(page.getByText('Pagos registrados (1)')).toBeVisible();
++
++      await monto.fill('55');
++      await pagar.click();
++      await expect(page.getByText('Pagos registrados (2)')).toBeVisible();
++      await expect(page.getByText('Este alquiler no tiene saldo pendiente por pagar.')).toBeVisible();
++    });
++
++    await test.step('finalizar la reserva y verla en el historial', async () => {
++      await page.goto('/dashboard/reservas');
++      await filaReserva.getByRole('button', { name: 'Finalizar' }).click();
++      await expect(filaReserva.getByTestId('reserva-estado')).toHaveText('Finalizada');
++
++      await page.goto('/dashboard/alquileres-historial');
++      await expect(page.getByText(vehiculo.placa)).toBeVisible();
++    });
++  });
++});
+diff --git a/frontend/tests/e2e/auth.spec.js b/frontend/tests/e2e/auth.spec.js
+index 9880aab..d2629cb 100644
+--- a/frontend/tests/e2e/auth.spec.js
++++ b/frontend/tests/e2e/auth.spec.js
+@@ -1,41 +1,73 @@
+ import { test, expect } from '@playwright/test';
++import { ADMIN, EMPLEADO, sufijoUnico, crearCliente } from './helpers/datos.js';
++import { iniciarSesion, aceptarDialogos } from './helpers/sesion.js';
+ 
+-test.describe('E2E 01: Flujo completo de Registro y Login', () => {
++test.describe('Autenticación y roles', () => {
++  test('registro e inicio de sesión de un cliente nuevo', async ({ page }) => {
++    const email = `autotest_${sufijoUnico().toLowerCase()}@tierracamba.com`;
++    const password = 'Password123*';
++    const mensajes = aceptarDialogos(page);
+ 
+-  const uniqueEmail = `autotest_${Date.now()}@tierracamba.com`;
+-  const password = 'Password123*';
+-
+-  test('Debe permitir registrarse y posteriormente iniciar sesión de forma exitosa', async ({ page }) => {
+-    // 1. Ir a la página de registro desde la landing
+     await page.goto('/');
+-    await page.locator('a.btn-register, a[href="/register"]').first().click();
+-    await expect(page).toHaveURL(/.*\/register/);
++    await page.locator('.btn-register').click();
++    await expect(page).toHaveURL(/\/register$/);
+ 
+-    // 2. Llenar formulario de registro
+     await page.fill('input[name="nombre"]', 'Usuario Automatizado');
+-    await page.fill('input[name="email"]', uniqueEmail);
++    await page.fill('input[name="email"]', email);
+     await page.fill('input[name="password"]', password);
++    await page.click('button[type="submit"]');
+ 
+-    // 👇 CONFIGURACIÓN DEL ALERT (Debe ir ANTES del clic)
+-    page.on('dialog', async dialog => {
+-      // Verificamos que el mensaje sea el de éxito
+-      expect(dialog.message()).toContain('Registro exitoso');
+-      // Aceptamos el alert (equivale a hacer clic en "OK")
+-      await dialog.accept();
+-    });
++    await expect(page).toHaveURL(/\/login$/);
++    expect(mensajes.join(' ')).toContain('Registro exitoso');
+ 
+-    // 3. Enviar formulario
++    await page.fill('input[type="email"]', email);
++    await page.fill('input[type="password"]', password);
+     await page.click('button[type="submit"]');
++    await expect(page).toHaveURL(/\/vehiculos$/);
++  });
+ 
+-    // 4. Verificar redirección al Login (Le damos 10s de margen)
+-    await expect(page).toHaveURL(/.*\/login/, { timeout: 10000 });
++  test('no permite registrar un correo repetido', async ({ page, request }) => {
++    const cliente = await crearCliente(request);
+ 
+-    // 5. Llenar el formulario de Login
+-    await page.fill('input[type="email"]', uniqueEmail);
+-    await page.fill('input[type="password"]', password);
++    await page.goto('/register');
++    await page.fill('input[name="nombre"]', 'Repetido');
++    await page.fill('input[name="email"]', cliente.email);
++    await page.fill('input[name="password"]', 'Password123*');
++    await page.click('button[type="submit"]');
++
++    await expect(page.locator('.alert-danger')).toContainText('ya está registrado');
++    await expect(page).toHaveURL(/\/register$/);
++  });
++
++  test('muestra error con una contraseña incorrecta', async ({ page }) => {
++    await page.goto('/login');
++    await page.fill('input[type="email"]', ADMIN.email);
++    await page.fill('input[type="password"]', 'incorrecta');
+     await page.click('button[type="submit"]');
+ 
+-    // 6. Verificar que ingresó al sistema (redirige a /vehiculos para clientes)
+-    await expect(page).toHaveURL(/.*\/vehiculos/);
++    await expect(page.locator('.alert-danger')).toContainText('Credenciales inválidas');
++    await expect(page).toHaveURL(/\/login$/);
++  });
++
++  test('administrador y empleado entran al dashboard con sus opciones', async ({ page }) => {
++    await iniciarSesion(page, ADMIN);
++    await expect(page).toHaveURL(/\/dashboard$/);
++    await expect(page.getByRole('link', { name: 'Gestionar Tarifas' })).toBeVisible();
++
++    await iniciarSesion(page, EMPLEADO);
++    await expect(page).toHaveURL(/\/dashboard$/);
++    await expect(page.getByRole('link', { name: 'Ir a Reservas' })).toBeVisible();
++    await expect(page.getByRole('link', { name: 'Gestionar Tarifas' })).toHaveCount(0);
++  });
++
++  test('cerrar sesión protege las rutas privadas', async ({ page, request }) => {
++    const cliente = await crearCliente(request);
++    await iniciarSesion(page, cliente);
++
++    await page.locator('.btn-logout').click();
++    await expect.poll(() => page.evaluate(() => localStorage.getItem('token'))).toBeNull();
++
++    await page.goto('/mis-reservas');
++    await expect(page).toHaveURL(/\/login$/);
+   });
+-});
+\ No newline at end of file
++});
+diff --git a/frontend/tests/e2e/disponibilidad.spec.js b/frontend/tests/e2e/disponibilidad.spec.js
+new file mode 100644
+index 0000000..cc657a6
+--- /dev/null
++++ b/frontend/tests/e2e/disponibilidad.spec.js
+@@ -0,0 +1,105 @@
++import { test, expect } from '@playwright/test';
++import {
++  PRECIO_DIA,
++  crearCliente,
++  crearVehiculo,
++  eliminarVehiculo,
++  crearReserva,
++  fechaFutura,
++  fechaHora,
++  soloFecha,
++  soloHora,
++  sumarHoras
++} from './helpers/datos.js';
++import { iniciarSesion } from './helpers/sesion.js';
++
++async function llenarBusqueda(page, inicio, fin) {
++  const formulario = page.locator('form');
++  await formulario.locator('input[type="date"]').nth(0).fill(soloFecha(inicio));
++  await formulario.locator('input[type="time"]').nth(0).fill(soloHora(inicio));
++  await formulario.locator('input[type="date"]').nth(1).fill(soloFecha(fin));
++  await formulario.locator('input[type="time"]').nth(1).fill(soloHora(fin));
++  await page.getByRole('button', { name: 'Buscar' }).click();
++}
++
++async function apareceEnLaFlota(page, modelo) {
++  await expect(page.getByText('vehículo(s) disponible(s)')).toBeVisible();
++  const siguiente = page.getByRole('button', { name: 'Siguiente' });
++
++  while (true) {
++    if (await page.getByRole('heading', { name: `Prueba ${modelo}` }).count()) return true;
++    if (!(await siguiente.count())) return false;
++    if (await siguiente.locator('..').evaluate((li) => li.classList.contains('disabled'))) return false;
++    await siguiente.click();
++  }
++}
++
++test.describe('Disponibilidad y solapamientos', () => {
++  let cliente;
++  let vehiculo;
++
++  test.beforeAll(async ({ request }) => {
++    cliente = await crearCliente(request);
++    vehiculo = await crearVehiculo(request);
++  });
++
++  test.afterAll(async ({ request }) => {
++    await eliminarVehiculo(request, vehiculo);
++  });
++
++  test('valida las fechas del buscador', async ({ page }) => {
++    await iniciarSesion(page, cliente);
++    const futuro = fechaFutura(5);
++    const error = page.locator('form .alert-danger');
++
++    await llenarBusqueda(page, futuro, sumarHoras(futuro, -2));
++    await expect(error).toHaveText('La fecha de devolución debe ser posterior a la de recogida.');
++
++    await llenarBusqueda(page, fechaFutura(-2), futuro);
++    await expect(error).toHaveText('La fecha de recogida no puede estar en el pasado.');
++
++    await page.locator('form input[type="date"]').nth(0).fill('');
++    await page.getByRole('button', { name: 'Buscar' }).click();
++    await expect(error).toHaveText('Elige la fecha de inicio y la de fin.');
++  });
++
++  test('un vehículo reservado se oculta en ese horario y vuelve en el horario contiguo', async ({ page, request }) => {
++    const inicio = fechaFutura(20, 10);
++    const fin = sumarHoras(inicio, 4);
++    await crearReserva(request, cliente, vehiculo, inicio, fin);
++    await iniciarSesion(page, cliente);
++
++    await llenarBusqueda(page, sumarHoras(inicio, 2), sumarHoras(fin, 2));
++    expect(await apareceEnLaFlota(page, vehiculo.modelo)).toBe(false);
++
++    await page.reload();
++    await llenarBusqueda(page, fin, sumarHoras(fin, 4));
++    expect(await apareceEnLaFlota(page, vehiculo.modelo)).toBe(true);
++  });
++
++  test('rechaza una reserva que se solapa con otra', async ({ page, request }) => {
++    const inicio = fechaFutura(25, 10);
++    await crearReserva(request, cliente, vehiculo, inicio, sumarHoras(inicio, 4));
++    await iniciarSesion(page, cliente);
++    await page.goto(`/vehiculos/${vehiculo.id}/reservar`);
++
++    await page.locator('input[type="datetime-local"]').nth(0).fill(fechaHora(sumarHoras(inicio, 2)));
++    await page.locator('input[type="datetime-local"]').nth(1).fill(fechaHora(sumarHoras(inicio, 5)));
++    await page.getByRole('button', { name: 'Confirmar reserva' }).click();
++
++    await expect(page.locator('form .alert-danger')).toContainText('ya está reservado');
++    await expect(page).toHaveURL(/\/reservar$/);
++  });
++
++  test('habilita el cobro por día cuando las horas superan la tarifa diaria', async ({ page }) => {
++    await iniciarSesion(page, cliente);
++    await page.goto(`/vehiculos/${vehiculo.id}/reservar`);
++    const inicio = fechaFutura(30, 8);
++
++    await page.locator('input[type="datetime-local"]').nth(0).fill(fechaHora(inicio));
++    await page.locator('input[type="datetime-local"]').nth(1).fill(fechaHora(sumarHoras(inicio, 10)));
++
++    await expect(page.locator('form select')).toHaveValue('DIA');
++    await expect(page.getByText(`Bs ${PRECIO_DIA}.00`, { exact: true })).toBeVisible();
++  });
++});
+diff --git a/frontend/tests/e2e/helpers/datos.js b/frontend/tests/e2e/helpers/datos.js
+new file mode 100644
+index 0000000..8a2a3a7
+--- /dev/null
++++ b/frontend/tests/e2e/helpers/datos.js
+@@ -0,0 +1,119 @@
++import { expect } from '@playwright/test';
++
++export const ADMIN = { email: 'admin@rentacar.com', password: 'admin123' };
++export const EMPLEADO = { email: 'empleado@rentacar.com', password: 'empleado123' };
++
++export const PRECIO_HORA = 40;
++export const PRECIO_DIA = 300;
++
++const HORA_MS = 60 * 60 * 1000;
++
++export function sufijoUnico() {
++  return `${Date.now().toString(36)}${Math.floor(Math.random() * 1000)}`.toUpperCase();
++}
++
++export function fechaFutura(dias, hora = 10) {
++  const fecha = new Date();
++  fecha.setDate(fecha.getDate() + dias);
++  fecha.setHours(hora, 0, 0, 0);
++  return fecha;
++}
++
++export function sumarHoras(fecha, horas) {
++  return new Date(fecha.getTime() + horas * HORA_MS);
++}
++
++const dos = (n) => String(n).padStart(2, '0');
++
++export function soloFecha(fecha) {
++  return `${fecha.getFullYear()}-${dos(fecha.getMonth() + 1)}-${dos(fecha.getDate())}`;
++}
++
++export function soloHora(fecha) {
++  return `${dos(fecha.getHours())}:${dos(fecha.getMinutes())}`;
++}
++
++export function fechaHora(fecha) {
++  return `${soloFecha(fecha)}T${soloHora(fecha)}`;
++}
++
++async function leer(respuesta) {
++  expect(respuesta.ok(), `${respuesta.url()} respondió ${respuesta.status()}: ${await respuesta.text()}`).toBeTruthy();
++  return respuesta.json();
++}
++
++export async function tokenDe(request, usuario) {
++  const datos = await leer(await request.post('/api/auth/login', {
++    data: { email: usuario.email, password: usuario.password }
++  }));
++  return datos.token;
++}
++
++export function cabeceras(token) {
++  return { Authorization: `Bearer ${token}` };
++}
++
++export async function crearCliente(request) {
++  const sufijo = sufijoUnico();
++  const cliente = {
++    nombre: `Cliente E2E ${sufijo}`,
++    email: `e2e_${sufijo.toLowerCase()}@tierracamba.com`,
++    password: 'Password123*'
++  };
++  await leer(await request.post('/api/auth/register', { data: cliente }));
++  cliente.token = await tokenDe(request, cliente);
++  return cliente;
++}
++
++export async function crearVehiculo(request) {
++  const token = await tokenDe(request, ADMIN);
++  const headers = cabeceras(token);
++  const categorias = await leer(await request.get('/api/categorias', { headers }));
++  const sufijo = sufijoUnico();
++
++  const { vehiculo } = await leer(await request.post('/api/vehiculos', {
++    headers,
++    data: {
++      placa: `E2E-${sufijo}`.slice(0, 20),
++      marca: 'Prueba',
++      modelo: `Modelo-${sufijo}`,
++      anio: 2024,
++      categoria_id: categorias[0].id,
++      transmision: 'MANUAL',
++      pasajeros: 5,
++      kilometraje_actual: 1000
++    }
++  }));
++
++  const tarifas = [];
++  for (const [modalidad, precio] of [['HORA', PRECIO_HORA], ['DIA', PRECIO_DIA]]) {
++    tarifas.push(await leer(await request.post('/api/tarifas', {
++      headers,
++      data: { modalidad, precio, vehiculo_id: vehiculo.id }
++    })));
++  }
++
++  return { ...vehiculo, tarifas };
++}
++
++export async function eliminarVehiculo(request, vehiculo) {
++  if (!vehiculo) return;
++  const token = await tokenDe(request, ADMIN);
++  for (const tarifa of vehiculo.tarifas) {
++    await request.delete(`/api/tarifas/${tarifa.id}`, { headers: cabeceras(token) });
++  }
++  await request.delete(`/api/vehiculos/${vehiculo.id}`, { headers: cabeceras(token) });
++}
++
++export async function crearReserva(request, cliente, vehiculo, inicio, fin, modalidad = 'HORA') {
++  const { reserva } = await leer(await request.post('/api/reservas', {
++    headers: cabeceras(cliente.token),
++    data: {
++      vehiculoId: vehiculo.id,
++      fechaInicio: inicio.toISOString(),
++      fechaFin: fin.toISOString(),
++      modalidad
++    }
++  }));
++  return reserva;
++}
+diff --git a/frontend/tests/e2e/helpers/sesion.js b/frontend/tests/e2e/helpers/sesion.js
+new file mode 100644
+index 0000000..e95c100
+--- /dev/null
++++ b/frontend/tests/e2e/helpers/sesion.js
+@@ -0,0 +1,20 @@
++import { expect } from '@playwright/test';
++
++export async function iniciarSesion(page, usuario) {
++  await page.goto('/login');
++  await page.evaluate(() => localStorage.clear());
++  await page.reload();
++  await page.fill('input[type="email"]', usuario.email);
++  await page.fill('input[type="password"]', usuario.password);
++  await page.click('button[type="submit"]');
++  await expect(page).toHaveURL(/\/(dashboard|vehiculos)$/);
++}
++
++export function aceptarDialogos(page) {
++  const mensajes = [];
++  page.on('dialog', async (dialogo) => {
++    mensajes.push(dialogo.message());
++    await dialogo.accept();
++  });
++  return mensajes;
++}
+diff --git a/frontend/tests/e2e/landing.spec.js b/frontend/tests/e2e/landing.spec.js
+index 1f92fd5..785e7e6 100644
+--- a/frontend/tests/e2e/landing.spec.js
++++ b/frontend/tests/e2e/landing.spec.js
+@@ -1,105 +1,56 @@
+ import { test, expect } from '@playwright/test';
+ 
+-test.describe('E2E 00: Carga de Landing Page y Navbar', () => {
+-
+-  test('Debe cargar la página principal con sus elementos clave', async ({ page }) => {
++async function simularSesion(page, usuario) {
++  await page.goto('/');
++  await page.evaluate((datos) => localStorage.setItem('usuario', JSON.stringify(datos)), usuario);
++  await page.reload();
++}
++
++test.describe('Landing page y navbar', () => {
++  test('carga la página principal con sus elementos clave', async ({ page }) => {
+     await page.goto('/');
+-    
+-    // 1. Verificar que el Navbar tenga el nombre de la marca ("Tierra Camba")
++
+     await expect(page.locator('.navbar-custom')).toContainText('Tierra Camba');
+-    
+-    // 2. Verificar que el Hero tenga el título principal
+-    await expect(page.locator('h1')).toContainText('Premium');
+-    
+-    // 3. Verificar que los botones de Login y Registro estén visibles
++    await expect(page.locator('h1.hero-title')).toContainText('Premium');
+     await expect(page.locator('.btn-login')).toHaveText('Iniciar Sesión');
+     await expect(page.locator('.btn-register')).toHaveText('Registrarse');
++    await expect(page.locator('.brands-section')).toBeVisible();
++    await expect(page.locator('footer')).toBeVisible();
+   });
+ 
+-  test('Debe mostrar el carrusel de marcas y la sección de info', async ({ page }) => {
++  test('cambia a modo oscuro y lo recuerda al recargar', async ({ page }) => {
+     await page.goto('/');
+-    const marcasSection = page.locator('.brands-section');
+-    await expect(marcasSection).toBeVisible();
+-  });
+ 
+-  test('Debe poder cambiar al Modo Oscuro usando el componente ThemeToggle', async ({ page }) => {
+-    await page.goto('/');
+-    
+-    // Buscar el switch de tema (.rc-theme)
+-    const themeToggle = page.locator('.rc-theme');
+-    await expect(themeToggle).toBeVisible();
+-    
+-    await themeToggle.click();
+-    
+-    // Verificar que el atributo data-theme del HTML cambió a "dark"
++    await page.locator('.rc-theme').click();
++    await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
++
++    await page.reload();
+     await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+   });
+ 
+-  test('Debe ocultar los enlaces de navegación en pantallas móviles (Responsive)', async ({ page }) => {
+-    // Simular pantalla pequeña (móvil < 768px definido en tu CSS)
++  test('oculta los enlaces de navegación en pantallas móviles', async ({ page }) => {
+     await page.setViewportSize({ width: 500, height: 800 });
+-    await page.goto('/');
++    await simularSesion(page, { nombre: 'Carlos Pérez', rol: 'CLIENTE' });
+ 
+-    // En tu CSS, los enlaces .nav-link-custom tienen display: none en móviles
+-    const navLink = page.locator('.nav-link-custom').first();
+-    await expect(navLink).not.toBeVisible();
++    await expect(page.locator('.nav-link-custom')).toHaveCount(2);
++    await expect(page.locator('.nav-link-custom').first()).toBeHidden();
+   });
+ 
+-  test('Debe mostrar el Navbar adaptado para el rol CLIENTE', async ({ page }) => {
+-    await page.goto('/');
+-    
+-    // Inyectar estado simulado de sesión para CLIENTE en localStorage
+-    await page.evaluate(() => {
+-      localStorage.setItem('usuario', JSON.stringify({
+-        nombre: 'Carlos Pérez',
+-        rol: 'CLIENTE'
+-      }));
+-    });
+-
+-    await page.reload();
++  test('muestra el navbar del cliente', async ({ page }) => {
++    await simularSesion(page, { nombre: 'Carlos Pérez', rol: 'CLIENTE' });
+ 
+-    // Validar enlaces exclusivos de cliente
+     await expect(page.locator('.navbar-links')).toContainText('List Cars');
+     await expect(page.locator('.navbar-links')).toContainText('Mis Reservas');
+     await expect(page.locator('.user-name')).toContainText('Hola, Carlos Pérez');
+     await expect(page.locator('.btn-logout')).toBeVisible();
+   });
+ 
+-  test('Debe mostrar el Navbar adaptado para el rol ADMINISTRADOR', async ({ page }) => {
+-    await page.goto('/');
+-    
+-    // Inyectar estado simulado de sesión para ADMINISTRADOR
+-    await page.evaluate(() => {
+-      localStorage.setItem('usuario', JSON.stringify({
+-        nombre: 'Admin Master',
+-        rol: 'ADMINISTRADOR'
+-      }));
+-    });
+-
+-    await page.reload();
++  test('muestra el navbar del administrador', async ({ page }) => {
++    await simularSesion(page, { nombre: 'Admin Master', rol: 'ADMINISTRADOR' });
+ 
+-    // Validar enlaces exclusivos de staff/admin
+     await expect(page.locator('.navbar-links')).toContainText('List Cars');
+     await expect(page.locator('.navbar-links')).toContainText('Dashboard');
+-    await expect(page.locator('.navbar-links')).toContainText('Gestión Reservas');
++    await expect(page.locator('.navbar-links')).not.toContainText('Mis Reservas');
+     await expect(page.locator('.user-name')).toContainText('Hola, Admin Master');
+   });
+-
+-  test('Debe mostrar la sección del Footer con su contenido clave', async ({ page }) => {
+-    await page.goto('/');
+-
+-    // Hacer scroll hasta el fondo para asegurar visibilidad del footer
+-    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+-
+-    const footer = page.locator('footer');
+-    await expect(footer).toBeVisible();
+-  });
+ });
+-
+-
+-/*
+-EJECUTAR TEST DESDE CONTENEDOR DOCKER:
+-docker exec -it rentacar_frontend sh
+-npx playwright test
+-exit
+-*/
+\ No newline at end of file
+diff --git a/frontend/tests/e2e/reservas.spec.js b/frontend/tests/e2e/reservas.spec.js
+new file mode 100644
+index 0000000..8f28484
+--- /dev/null
++++ b/frontend/tests/e2e/reservas.spec.js
+@@ -0,0 +1,93 @@
++import { test, expect } from '@playwright/test';
++import {
++  EMPLEADO,
++  crearCliente,
++  crearVehiculo,
++  eliminarVehiculo,
++  crearReserva,
++  cabeceras,
++  fechaFutura,
++  fechaHora,
++  sumarHoras
++} from './helpers/datos.js';
++import { iniciarSesion, aceptarDialogos } from './helpers/sesion.js';
++
++test.describe('Reservas', () => {
++  let cliente;
++  let vehiculo;
++
++  test.beforeAll(async ({ request }) => {
++    cliente = await crearCliente(request);
++    vehiculo = await crearVehiculo(request);
++  });
++
++  test.afterAll(async ({ request }) => {
++    await eliminarVehiculo(request, vehiculo);
++  });
++
++  test('E2E 01: el cliente crea una reserva y la ve en Mis reservas', async ({ page }) => {
++    const inicio = fechaFutura(10);
++    await iniciarSesion(page, cliente);
++    await page.goto(`/vehiculos/${vehiculo.id}/reservar`);
++
++    await page.locator('input[type="datetime-local"]').nth(0).fill(fechaHora(inicio));
++    await page.locator('input[type="datetime-local"]').nth(1).fill(fechaHora(sumarHoras(inicio, 2)));
++    await expect(page.getByText('2 horas × Bs 40.00')).toBeVisible();
++    await expect(page.getByText('Bs 80.00', { exact: true })).toBeVisible();
++    await page.getByRole('button', { name: 'Confirmar reserva' }).click();
++
++    await expect(page).toHaveURL(/\/reservas\/\d+$/);
++    await expect(page.getByTestId('reserva-estado')).toHaveText('Reservada');
++    await expect(page.locator('[data-estado="RESERVADA"]')).toHaveAttribute('data-activo', 'true');
++
++    await page.goto('/mis-reservas');
++    const fila = page.locator('tbody tr').filter({ hasText: vehiculo.modelo });
++    await expect(fila).toContainText('Bs 80.00');
++    await expect(fila.getByTestId('reserva-estado')).toHaveText('Reservada');
++  });
++
++  test('E2E 02: el cliente cancela su reserva', async ({ page, request }) => {
++    const inicio = fechaFutura(12);
++    const reserva = await crearReserva(request, cliente, vehiculo, inicio, sumarHoras(inicio, 2));
++    aceptarDialogos(page);
++
++    await iniciarSesion(page, cliente);
++    await page.goto(`/reservas/${reserva.id}`);
++    await page.getByRole('button', { name: 'Cancelar reserva' }).click();
++
++    await expect(page.getByTestId('reserva-estado')).toHaveText('Cancelada');
++    await expect(page.getByTestId('timeline-estados')).toContainText('fue cancelada');
++    await expect(page.getByRole('button', { name: 'Cancelar reserva' })).toHaveCount(0);
++  });
++
++  test('E2E 03: el empleado confirma una reserva', async ({ page, request }) => {
++    const inicio = fechaFutura(14);
++    const reserva = await crearReserva(request, cliente, vehiculo, inicio, sumarHoras(inicio, 2));
++
++    await iniciarSesion(page, EMPLEADO);
++    await page.goto('/dashboard/reservas');
++    const fila = page.locator('tbody tr').filter({
++      has: page.locator(`a[href="/reservas/${reserva.id}"]`)
++    });
++    await fila.getByRole('button', { name: 'Confirmar' }).click();
++
++    await expect(fila.getByTestId('reserva-estado')).toHaveText('Confirmada');
++    await expect(fila.getByRole('button', { name: 'Crear alquiler' })).toBeVisible();
++  });
++
++  test('un cliente no ve reservas ajenas ni puede confirmar', async ({ page, request }) => {
++    const inicio = fechaFutura(16);
++    const reserva = await crearReserva(request, cliente, vehiculo, inicio, sumarHoras(inicio, 2));
++    const intruso = await crearCliente(request);
++
++    const confirmar = await request.patch(`/api/reservas/${reserva.id}/confirmar`, {
++      headers: cabeceras(cliente.token)
++    });
++    expect(confirmar.status()).toBe(403);
++
++    await iniciarSesion(page, intruso);
++    await page.goto(`/reservas/${reserva.id}`);
++    await expect(page.locator('.alert-danger')).toBeVisible();
++    await expect(page.getByTestId('reserva-estado')).toHaveCount(0);
++  });
++});
+diff --git a/frontend/tests/e2e/tarifas.spec.js b/frontend/tests/e2e/tarifas.spec.js
+new file mode 100644
+index 0000000..85e8fb6
+--- /dev/null
++++ b/frontend/tests/e2e/tarifas.spec.js
+@@ -0,0 +1,40 @@
++import { test, expect } from '@playwright/test';
++import { ADMIN, crearVehiculo, eliminarVehiculo } from './helpers/datos.js';
++import { iniciarSesion, aceptarDialogos } from './helpers/sesion.js';
++
++test.describe('Gestión de tarifas', () => {
++  let vehiculo;
++
++  test.beforeAll(async ({ request }) => {
++    vehiculo = await crearVehiculo(request);
++  });
++
++  test.afterAll(async ({ request }) => {
++    await eliminarVehiculo(request, vehiculo);
++  });
++
++  test('el administrador crea, edita y elimina una tarifa', async ({ page }) => {
++    aceptarDialogos(page);
++    await iniciarSesion(page, ADMIN);
++    await page.goto('/admin/tarifas');
++
++    const formulario = page.locator('form');
++    await formulario.locator('select').nth(0).selectOption('vehiculo');
++    await formulario.locator('select').nth(1).selectOption(String(vehiculo.id));
++    await formulario.locator('select').nth(2).selectOption('SEMANA');
++    await formulario.locator('input[type="number"]').fill('1500');
++    await page.getByRole('button', { name: 'Guardar Tarifa' }).click();
++    await expect(page.getByText('¡Tarifa creada con éxito!')).toBeVisible();
++
++    const fila = page.locator('tbody tr').filter({ hasText: vehiculo.placa }).filter({ hasText: 'SEMANA' });
++    await expect(fila).toContainText('1500');
++
++    await fila.getByRole('button', { name: 'Editar' }).click();
++    await fila.locator('input[type="number"]').fill('1600');
++    await fila.getByRole('button', { name: 'Guardar' }).click();
++    await expect(fila).toContainText('1600');
++
++    await fila.getByRole('button', { name: 'Eliminar' }).click();
++    await expect(fila).toHaveCount(0);
++  });
++});
+diff --git a/frontend/tests/e2e/vehiculos.spec.js b/frontend/tests/e2e/vehiculos.spec.js
+index 69a6b0a..3c62f71 100644
+--- a/frontend/tests/e2e/vehiculos.spec.js
++++ b/frontend/tests/e2e/vehiculos.spec.js
+@@ -1,55 +1,52 @@
+ import { test, expect } from '@playwright/test';
++import { ADMIN, crearCliente, sufijoUnico } from './helpers/datos.js';
++import { iniciarSesion, aceptarDialogos } from './helpers/sesion.js';
+ 
+-test.describe('E2E: Módulo de Vehículos', () => {
+-
+-  // Test 1: Cliente consulta vehículos
+-  test('Cliente puede ver la lista de vehículos', async ({ page }) => {
+-    // 1. Login como cliente
+-    await page.goto('/login');
+-    await page.fill('input[type="email"]', 'alfredito512@gmail.com');
+-    await page.fill('input[type="password"]', '123456');
+-    await page.click('button[type="submit"]');
+-
+-    // 2. Esperar a que cargue la página de vehículos
+-    await expect(page).toHaveURL('/vehiculos');
+-    await expect(page.getByText('Nuestra Flota')).toBeVisible();
+-    
+-    // 3. Verificar que haya al menos una tarjeta de vehículo
+-    const tarjetas = page.locator('.card');
+-    await expect(tarjetas.first()).toBeVisible();
++test.describe('Módulo de vehículos', () => {
++  let cliente;
++
++  test.beforeAll(async ({ request }) => {
++    cliente = await crearCliente(request);
+   });
+ 
+-  // Test 2: Admin gestiona vehículos
+-  test('Admin puede ver la tabla de gestión de vehículos', async ({ page }) => {
+-    // 1. Login como admin
+-    await page.goto('/login');
+-    await page.fill('input[type="email"]', 'admin@rentacar.com');
+-    await page.fill('input[type="password"]', 'admin123');
+-    await page.click('button[type="submit"]');
++  test('el cliente ve la flota', async ({ page }) => {
++    await iniciarSesion(page, cliente);
+ 
+-    // 2. Ir directo a la gestión de vehículos
+-    await page.goto('/dashboard/admin/vehiculos');
+-    
+-    // 3. Verificar que el título esté visible
+-    await expect(page.getByRole('heading', { name: 'Gestión de Vehículos' })).toBeVisible();
+-    
+-    // 4. Verificar que exista el botón de crear
+-    await expect(page.getByRole('link', { name: '+ Nuevo Vehículo' })).toBeVisible();
++    await expect(page.getByRole('heading', { name: 'Nuestra Flota' })).toBeVisible();
++    await expect(page.locator('.card-img-top').first()).toBeVisible();
+   });
+ 
+-  // Test 3: Cliente NO puede gestionar vehículos
+-  test('Cliente no puede acceder a la gestión de vehículos', async ({ page }) => {
+-    // 1. Login como cliente
+-    await page.goto('/login');
+-    await page.fill('input[type="email"]', 'cliente@rentacar.com');
+-    await page.fill('input[type="password"]', 'cliente123');
+-    await page.click('button[type="submit"]');
++  test('el administrador crea, busca y elimina un vehículo', async ({ page }) => {
++    const sufijo = sufijoUnico();
++    const placa = `UI-${sufijo}`.slice(0, 20);
++    const mensajes = aceptarDialogos(page);
+ 
+-    // 2. Intentar entrar a la ruta de admin
++    await iniciarSesion(page, ADMIN);
+     await page.goto('/dashboard/admin/vehiculos');
+-    
+-    // 3. Verificar que el sistema lo redirija fuera de la página de admin
+-    await expect(page).not.toHaveURL('/dashboard/admin/vehiculos');
++    await page.getByRole('link', { name: '+ Nuevo Vehículo' }).click();
++
++    await page.fill('input[name="placa"]', placa);
++    await page.fill('input[name="marca"]', 'Nissan');
++    await page.fill('input[name="modelo"]', `UI-${sufijo}`);
++    await page.getByRole('button', { name: 'Registrar Vehículo' }).click();
++
++    await expect(page).toHaveURL(/\/dashboard\/admin\/vehiculos$/);
++    expect(mensajes.join(' ')).toContain('creado exitosamente');
++
++    await page.getByPlaceholder('Buscar por placa, marca o modelo...').fill(placa);
++    const fila = page.locator('tbody tr').filter({ hasText: placa });
++    await expect(fila).toContainText('DISPONIBLE');
++
++    await fila.getByRole('button', { name: 'Eliminar' }).click();
++    await expect(page.getByText('No se encontraron vehículos.')).toBeVisible();
+   });
+ 
+-});
+\ No newline at end of file
++  test('el cliente no accede a las páginas de gestión', async ({ page }) => {
++    await iniciarSesion(page, cliente);
++
++    for (const ruta of ['/dashboard', '/dashboard/reservas', '/dashboard/admin/vehiculos', '/admin/tarifas']) {
++      await page.goto(ruta);
++      await expect(page).toHaveURL(/\/vehiculos$/);
++    }
++  });
++});
+diff --git a/frontend/vite.config.js b/frontend/vite.config.js
+index 49a68cc..ec0aa19 100644
+--- a/frontend/vite.config.js
++++ b/frontend/vite.config.js
+@@ -3,6 +3,9 @@ import react from '@vitejs/plugin-react';
+ 
+ export default defineConfig({
+   plugins: [react()],
++  test: {
++    exclude: ['**/node_modules/**', '**/dist/**', 'tests/e2e/**']
++  },
+   server: {
+     host: '0.0.0.0',
+     port: 5173,
+-- 
+2.43.0
+
