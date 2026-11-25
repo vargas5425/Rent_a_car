@@ -103,14 +103,20 @@ function AlquileresActivosPage() {
                       <td className="fw-semibold">Bs {Number(alquiler.monto_total).toFixed(2)}</td>
                       <td><span className="badge bg-success">{alquiler.estado}</span></td>
                       <td>
-                        {/* 👇 Agregamos el botón de cargos y acomodamos el layout */}
-                        <div className="d-flex gap-2">
+                        <div className="d-flex flex-wrap gap-2">
                           <button
                             type="button"
                             className="btn btn-outline-primary btn-sm"
                             onClick={() => navigate(`/dashboard/alquileres/${alquiler.id}/devolucion`)}
                           >
                             Registrar devolución
+                          </button>
+                          <button
+                            type="button"
+                            className="btn btn-outline-success btn-sm"
+                            onClick={() => navigate(`/dashboard/alquileres/${alquiler.id}/pagos`)}
+                          >
+                            Registrar pago
                           </button>
                         </div>
                       </td>

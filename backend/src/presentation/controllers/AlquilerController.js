@@ -9,6 +9,7 @@ import RegistrarCargoAdicional from '../../application/alquileres/RegistrarCargo
 import alquilerRepo from '../../infrastructure/repositories/AlquileresRepository.js';
 import cargoRepo from '../../infrastructure/repositories/CargoAdicionalRepository.js';
 import reservaRepo from '../../infrastructure/repositories/ReservaRepository.js';
+import pagoRepo from '../../infrastructure/repositories/PagoRepository.js';
 
 const pendientesService = new ObtenerAlquileresPendientes(alquilerRepo);
 const activosService = new ObtenerAlquileresActivos(alquilerRepo);
@@ -31,6 +32,26 @@ function responderError(res, error) {
   }
   console.error('Error en AlquilerController:', error);
   return res.status(500).json({ error: 'Error interno del servidor' });
+}
+
+async function adjuntarResumenPagos(alquiler) {
+  const montoTotal = Number(alquiler.monto_total || 0);
+  const depositoGarantia = Number(alquiler.deposito_garantia || 0);
+  const totalPagado = await pagoRepo.calcularTotalPagado(alquiler.id);
+  const pagos = await pagoRepo.listarPorAlquiler(alquiler.id);
+  const saldoPendiente = Math.max(
+    0,
+    Math.round((montoTotal - totalPagado - depositoGarantia) * 100) / 100
+  );
+
+  return {
+    ...alquiler,
+    monto_total: montoTotal,
+    deposito_garantia: depositoGarantia,
+    total_pagado: totalPagado,
+    saldo_pendiente: saldoPendiente,
+    pagos
+  };
 }
 
 export async function postCrearAlquiler(req, res) {
@@ -61,11 +82,12 @@ export async function getActivos(req, res) {
   }
 }
 
-// 👇 NUEVO: GET /alquileres/:id
+// GET /alquileres/:id
 export async function getPorId(req, res) {
   try {
     const alquiler = await obtenerAlquilerPorId(req.params.id, req.usuario);
-    res.status(200).json({ alquiler });
+    const alquilerConPagos = await adjuntarResumenPagos(alquiler);
+    res.status(200).json({ alquiler: alquilerConPagos });
   } catch (error) {
     responderError(res, error);
   }
@@ -110,16 +132,27 @@ export async function getHistorial(req, res) {
 
         const cargos = await cargoRepo.listarPorAlquiler(alquiler.id);
         const totalCargos = await cargoRepo.calcularTotal(alquiler.id);
-        
-        // 👇 CORRECCIÓN: el monto_total YA incluye los cargos, no sumamos de nuevo
+
+        // El monto_total YA incluye los cargos, no sumamos de nuevo
         const montoAlquiler = Number(alquiler.monto_total || 0);
+        const depositoGarantia = Number(alquiler.deposito_garantia || 0);
+        const totalPagado = await pagoRepo.calcularTotalPagado(alquiler.id);
+        const pagos = await pagoRepo.listarPorAlquiler(alquiler.id);
+        const saldoPendiente = Math.max(
+          0,
+          Math.round((montoAlquiler - totalPagado - depositoGarantia) * 100) / 100
+        );
 
         return {
           ...alquiler,
           estado_reserva: reserva?.estado ?? null,
           monto_alquiler: montoAlquiler,
+          deposito_garantia: depositoGarantia,
           total_cargos: totalCargos, // Solo informativo
-          total_final: montoAlquiler, // 👈 El total real es monto_total
+          total_final: montoAlquiler, // El total real es monto_total
+          total_pagado: totalPagado,
+          saldo_pendiente: saldoPendiente,
+          pagos,
           cargos_adicionales: cargos.map((cargo) => ({
             id: cargo.id,
             tipo: cargo.tipo,

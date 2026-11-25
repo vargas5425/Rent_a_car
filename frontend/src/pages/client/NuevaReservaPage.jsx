@@ -23,6 +23,10 @@ export default function NuevaReservaPage() {
   const [enviando, setEnviando] = useState(false);
 
   useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+  }, [id]);
+
+  useEffect(() => {
     let isMounted = true;
     const cargarVehiculo = async () => {
       try {
@@ -41,22 +45,40 @@ export default function NuevaReservaPage() {
     return () => { isMounted = false; };
   }, [id]);
 
-  let esMenorADia = false;
-  if (inicio && fin) {
-    const horas = (new Date(fin) - new Date(inicio)) / (1000 * 60 * 60);
-    if (horas > 0 && horas < 24) esMenorADia = true;
-  }
-
-  useEffect(() => {
-    if (esMenorADia && modalidad !== 'HORA') setModalidad('HORA');
-  }, [esMenorADia, modalidad]);
-
-  // 👇 Función auxiliar para extraer precios de las tarifas
+  // Función auxiliar para extraer precios de las tarifas
   const obtenerPrecio = (vehiculo, modalidad) => {
     if (!vehiculo || !vehiculo.tarifas) return 0;
     const tarifa = vehiculo.tarifas.find(t => t.modalidad === modalidad);
     return tarifa ? Number(tarifa.precio) : 0;
   };
+
+  const precioHora = vehiculo ? obtenerPrecio(vehiculo, 'HORA') : 0;
+  const precioDia = vehiculo ? obtenerPrecio(vehiculo, 'DIA') : 0;
+
+  const resumenHora = precioHora > 0
+    ? calcularTotal({ fechaInicio: inicio, fechaFin: fin, modalidad: 'HORA', precioUnitario: precioHora })
+    : null;
+
+  const tieneTarifaDia = precioDia > 0;
+  const superaOCuestaIgualQueDia = Boolean(
+    resumenHora && tieneTarifaDia && resumenHora.total >= precioDia
+  );
+
+  // Si hay tarifa por día y el total por hora es menor al costo diario, conviene cobrar por hora.
+  // Si el total por hora iguala o supera el costo diario, se habilita la opción Día.
+  const bloquearDiaPorMenorCosto = Boolean(
+    resumenHora && tieneTarifaDia && !superaOCuestaIgualQueDia
+  );
+
+  useEffect(() => {
+    if (!resumenHora || !tieneTarifaDia) return;
+
+    if (bloquearDiaPorMenorCosto && modalidad === 'DIA') {
+      setModalidad('HORA');
+    } else if (superaOCuestaIgualQueDia && modalidad === 'HORA') {
+      setModalidad('DIA');
+    }
+  }, [resumenHora, tieneTarifaDia, bloquearDiaPorMenorCosto, superaOCuestaIgualQueDia, modalidad]);
 
   const precioUnitario = vehiculo ? obtenerPrecio(vehiculo, modalidad) : 0;
   const resumen = calcularTotal({ fechaInicio: inicio, fechaFin: fin, modalidad, precioUnitario });
@@ -98,7 +120,21 @@ export default function NuevaReservaPage() {
       <Navbar />
 
       <div className="container py-5 flex-grow-1" style={{ marginTop: '80px', maxWidth: '960px' }}>
-        <Link to="/vehiculos" className="text-decoration-none text-muted">← Volver a la flota</Link>
+        <div className="mb-3">
+          <Link
+            to="/vehiculos"
+            className="btn btn-outline-secondary d-inline-flex align-items-center gap-2 px-3 py-2 rounded-3 fw-medium"
+            style={{
+              color: 'var(--rc-text)',
+              borderColor: 'var(--rc-border)',
+              backgroundColor: 'var(--rc-card)'
+            }}
+          >
+            <i className="fa fa-arrow-left" aria-hidden="true"></i>
+            <span>Volver a la flota</span>
+          </Link>
+        </div>
+
         <h1 className="fw-bold my-3" style={{ color: 'var(--rc-text)' }}>Confirmar reserva</h1>
 
         {cargando && <p className="text-muted">Cargando vehículo...</p>}
@@ -127,46 +163,58 @@ export default function NuevaReservaPage() {
                       <i className="fa fa-check-square-o me-1" aria-hidden="true"></i> {vehiculo.pasajeros} pasajeros
                     </p>
                   </div>
-                  {/* 👇 MOSTRAR PRECIOS DESDE TARIFAS */}
-                  {obtenerPrecio(vehiculo, 'HORA') > 0 && (
-                    <p className="mb-1" style={{ color: 'var(--rc-text)' }}>{formatearBs(obtenerPrecio(vehiculo, 'HORA'))} <span className="text-muted">por hora</span></p>
+                  {/* MOSTRAR PRECIOS DESDE TARIFAS */}
+                  {precioHora > 0 && (
+                    <p className="mb-1" style={{ color: 'var(--rc-text)' }}>{formatearBs(precioHora)} <span className="text-muted">por hora</span></p>
                   )}
-                  {obtenerPrecio(vehiculo, 'DIA') > 0 && (
-                    <p className="mb-0" style={{ color: 'var(--rc-text)' }}>{formatearBs(obtenerPrecio(vehiculo, 'DIA'))} <span className="text-muted">por día</span></p>
+                  {precioDia > 0 && (
+                    <p className="mb-0" style={{ color: 'var(--rc-text)' }}>{formatearBs(precioDia)} <span className="text-muted">por día</span></p>
                   )}
                 </div>
               </div>
             </div>
 
             <div className="col-md-7">
-              <form onSubmit={handleSubmit} className="card p-4">
+              <form onSubmit={handleSubmit} className="card p-4 text-start">
                 {error && <div className="alert alert-danger">{error}</div>}
 
-                <div className="mb-3">
-                  <label className="form-label fw-semibold" style={{ color: 'var(--rc-text)' }}>Cobrar por</label>
+                <div className="mb-3 w-100">
+                  <label className="form-label fw-semibold d-block text-start" style={{ color: 'var(--rc-text)' }}>Cobrar por</label>
                   <select
-                    className="form-select"
+                    className="form-select w-100 text-start"
                     value={modalidad}
                     onChange={(e) => setModalidad(e.target.value)}
-                    style={{ backgroundColor: 'var(--rc-card)', color: 'var(--rc-text)', borderColor: 'var(--rc-border)' }}
+                    style={{
+                      width: '100%',
+                      maxWidth: '100%',
+                      backgroundColor: 'var(--rc-card)',
+                      color: 'var(--rc-text)',
+                      borderColor: 'var(--rc-border)'
+                    }}
                   >
-                    <option value="HORA">Hora</option>
-                    <option value="DIA" disabled={esMenorADia}>Día</option>
+                    {precioHora > 0 && <option value="HORA">Hora</option>}
+                    {precioDia > 0 && <option value="DIA" disabled={bloquearDiaPorMenorCosto}>Día</option>}
                   </select>
-                  
-                  {esMenorADia && (
-                    <small className="text-danger mt-1 d-block fw-semibold">
-                      Alquiler menor a 24 horas: se cobra por hora.
+
+                  {bloquearDiaPorMenorCosto && (
+                    <small className="text-muted mt-1 d-block fw-semibold">
+                      El cobro por hora ({formatearBs(resumenHora.total)}) es menor a la tarifa diaria ({formatearBs(precioDia)}): conviene cobrar por hora.
+                    </small>
+                  )}
+
+                  {superaOCuestaIgualQueDia && (
+                    <small className="text-success mt-1 d-block fw-semibold">
+                      El cobro por hora ({formatearBs(resumenHora.total)}) iguala o supera la tarifa diaria ({formatearBs(precioDia)}): modalidad Día habilitada.
                     </small>
                   )}
                 </div>
 
                 <div className="row">
                   <div className="col-md-6 mb-3">
-                    <label className="form-label fw-semibold" style={{ color: 'var(--rc-text)' }}>Recogida</label>
+                    <label className="form-label fw-semibold d-block text-start" style={{ color: 'var(--rc-text)' }}>Recogida</label>
                     <input
                       type="datetime-local"
-                      className="form-control"
+                      className="form-control w-100"
                       value={inicio}
                       min={minFecha}
                       onChange={(e) => setInicio(e.target.value)}
@@ -174,10 +222,10 @@ export default function NuevaReservaPage() {
                     />
                   </div>
                   <div className="col-md-6 mb-3">
-                    <label className="form-label fw-semibold" style={{ color: 'var(--rc-text)' }}>Devolución</label>
+                    <label className="form-label fw-semibold d-block text-start" style={{ color: 'var(--rc-text)' }}>Devolución</label>
                     <input
                       type="datetime-local"
-                      className="form-control"
+                      className="form-control w-100"
                       value={fin}
                       min={inicio || minFecha}
                       onChange={(e) => setFin(e.target.value)}
@@ -186,7 +234,7 @@ export default function NuevaReservaPage() {
                   </div>
                 </div>
 
-                <div className="rounded-3 p-3 mb-4" style={{ background: 'var(--rc-bg-alt)' }}>
+                <div className="rounded-3 p-3 mb-4 w-100" style={{ background: 'var(--rc-bg-alt)' }}>
                   {resumen ? (
                     <>
                       <div className="d-flex justify-content-between">

@@ -43,19 +43,39 @@ export default function VehiculoDetallePage() {
     return tarifa ? tarifa.precio : null;
   };
 
+  const claseBadgeEstado =
+    vehiculo.estado === 'DISPONIBLE'
+      ? 'bg-success'
+      : vehiculo.estado === 'ALQUILADA'
+      ? 'bg-primary'
+      : 'bg-warning text-dark';
+
   return (
     <div className="d-flex flex-column min-vh-100" style={{ backgroundColor: 'var(--rc-bg)' }}>
       <Navbar />
 
       <div className="container py-5 flex-grow-1" style={{ marginTop: '80px' }}>
-        <Link to="/vehiculos" className="text-decoration-none text-muted mb-3 d-inline-block">← Volver a la flota</Link>
-        
+        <div className="mb-4">
+          <Link
+            to="/vehiculos"
+            className="btn btn-outline-secondary d-inline-flex align-items-center gap-2 px-3 py-2 rounded-3 fw-medium"
+            style={{
+              color: 'var(--rc-text)',
+              borderColor: 'var(--rc-border)',
+              backgroundColor: 'var(--rc-card)'
+            }}
+          >
+            <i className="fa fa-arrow-left" aria-hidden="true"></i>
+            <span>Volver a la flota</span>
+          </Link>
+        </div>
+
         <div className="row g-5">
           {/* Imagen Grande */}
           <div className="col-md-7">
-            <img 
-              src={obtenerUrlImagen(vehiculo.imagen_url)} 
-              alt={vehiculo.modelo} 
+            <img
+              src={obtenerUrlImagen(vehiculo.imagen_url)}
+              alt={vehiculo.modelo}
               className="img-fluid rounded-4 shadow-sm w-100"
               style={{ maxHeight: '500px', objectFit: 'cover' }}
             />
@@ -63,33 +83,61 @@ export default function VehiculoDetallePage() {
 
           {/* Información */}
           <div className="col-md-5">
-            <span className="badge bg-success mb-2">{vehiculo.estado}</span>
-            <h1 className="fw-bold mb-2" style={{ color: 'var(--rc-text)' }}>{vehiculo.marca} {vehiculo.modelo}</h1>
-            <p className="text-muted fs-5 mb-4">Año {vehiculo.anio} • Placa: {vehiculo.placa}</p>
-            
+            <span className={`badge ${claseBadgeEstado} mb-2 px-3 py-2 rounded-pill`}>
+              {vehiculo.estado}
+            </span>
+            <h1 className="fw-bold mb-2" style={{ color: 'var(--rc-text)' }}>
+              {vehiculo.marca} {vehiculo.modelo}
+            </h1>
+
+            <div className="d-flex flex-column gap-1 mb-4" style={{ fontSize: '1.05rem' }}>
+              <span className="text-muted">
+                Año: <strong style={{ color: 'var(--rc-text)' }}>{vehiculo.anio}</strong>
+              </span>
+              <span className="text-muted">
+                Placa: <strong style={{ color: 'var(--rc-text)' }}>{vehiculo.placa || '—'}</strong>
+              </span>
+            </div>
+
             <div className="card p-4 mb-4" style={{ backgroundColor: 'var(--rc-card)' }}>
               <h5 className="fw-bold mb-3" style={{ color: 'var(--rc-text)' }}>Especificaciones</h5>
               <ul className="list-unstyled mb-0">
-                <li className="mb-2" style={{ color: 'var(--rc-text)' }}><i className="fa fa-check text-success me-2"></i> Categoría: <strong>{vehiculo.categoria ? vehiculo.categoria.nombre : 'N/A'}</strong></li>
-                <li className="mb-2" style={{ color: 'var(--rc-text)' }}><i className="fa fa-check text-success me-2"></i> Transmisión: <strong>{vehiculo.transmision}</strong></li>
-                <li className="mb-2" style={{ color: 'var(--rc-text)' }}><i className="fa fa-check text-success me-2"></i> Pasajeros: <strong>{vehiculo.pasajeros}</strong></li>
-                <li className="mb-2" style={{ color: 'var(--rc-text)' }}><i className="fa fa-check text-success me-2"></i> Kilometraje: <strong>{vehiculo.kilometraje_actual} km</strong></li>
+                <li className="mb-2" style={{ color: 'var(--rc-text)' }}>
+                  <i className="fa fa-check text-success me-2"></i>
+                  Categoría: <strong>{vehiculo.categoria ? vehiculo.categoria.nombre : 'N/A'}</strong>
+                </li>
+                <li className="mb-2" style={{ color: 'var(--rc-text)' }}>
+                  <i className="fa fa-check text-success me-2"></i>
+                  Transmisión: <strong>{vehiculo.transmision}</strong>
+                </li>
+                <li className="mb-2" style={{ color: 'var(--rc-text)' }}>
+                  <i className="fa fa-check text-success me-2"></i>
+                  Pasajeros: <strong>{vehiculo.pasajeros}</strong>
+                </li>
+                <li className="mb-0" style={{ color: 'var(--rc-text)' }}>
+                  <i className="fa fa-check text-success me-2"></i>
+                  Kilometraje: <strong>{vehiculo.kilometraje_actual} km</strong>
+                </li>
               </ul>
             </div>
 
             <div className="card p-4 mb-4" style={{ backgroundColor: 'var(--rc-card)' }}>
               <h5 className="fw-bold mb-3" style={{ color: 'var(--rc-text)' }}>Tarifas</h5>
-              <div className="d-flex justify-content mb-2">
+              <div className="d-flex align-items-center gap-2 mb-2">
                 <span className="text-muted">Por hora:</span>
-                <strong className="text-warning">{getPrecio('HORA') ? formatearBs(getPrecio('HORA')) : 'No disponible'}</strong>
+                <strong className="text-warning fs-6">
+                  {getPrecio('HORA') ? formatearBs(getPrecio('HORA')) : 'No disponible'}
+                </strong>
               </div>
-              <div className="d-flex justify-content mb-2">
+              <div className="d-flex align-items-center gap-2">
                 <span className="text-muted">Por día:</span>
-                <strong className="text-warning">{getPrecio('DIA') ? formatearBs(getPrecio('DIA')) : 'No disponible'}</strong>
+                <strong className="text-warning fs-6">
+                  {getPrecio('DIA') ? formatearBs(getPrecio('DIA')) : 'No disponible'}
+                </strong>
               </div>
             </div>
 
-            <button 
+            <button
               className="btn btn-dark w-100 py-3 fw-bold"
               onClick={() => navigate(`/vehiculos/${vehiculo.id}/reservar`)}
               disabled={vehiculo.estado === 'MANTENIMIENTO'}

@@ -6,6 +6,7 @@ import ReservaModel from './ReservaModel.js';
 import TarifaModel from './TarifaModel.js';
 import AlquilerModel from './AlquilerModel.js';
 import CargoAdicionalModel from './CargoAdicionalModel.js';
+import PagoModel from './PagoModel.js';
 
 // Relaciones de la Base de Datos
 CategoriaModel.hasMany(VehiculoModel, { foreignKey: 'categoria_id', as: 'vehiculos' });
@@ -40,6 +41,9 @@ AlquilerModel.belongsTo(ReservaModel, { foreignKey: 'reserva_id', as: 'reserva' 
 AlquilerModel.hasMany(CargoAdicionalModel, { foreignKey: 'alquiler_id', as: 'cargos' });
 CargoAdicionalModel.belongsTo(AlquilerModel, { foreignKey: 'alquiler_id', as: 'alquiler' });
 
+AlquilerModel.hasMany(PagoModel, { foreignKey: 'alquiler_id', as: 'pagos' });
+PagoModel.belongsTo(AlquilerModel, { foreignKey: 'alquiler_id', as: 'alquiler' });
+
 export {
   sequelize,
   UsuarioModel,
@@ -49,4 +53,5 @@ export {
   TarifaModel,
   AlquilerModel,
   CargoAdicionalModel,
+  PagoModel,
 };

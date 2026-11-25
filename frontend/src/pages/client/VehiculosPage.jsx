@@ -1,11 +1,13 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../../services/api';
 import { buscarDisponibles } from '../../services/reservasService';
-import { validarBusqueda, aInputFecha, formatearBs } from '../../utils/reservas';
+import { validarBusqueda, formatearBs } from '../../utils/reservas';
 import { obtenerUrlImagen } from '../../utils/imagenes';
 import Navbar from '../../components/layout/Navbar/Navbar';
 import Footer from '../../components/layout/Footer/Footer';
+
+const VEHICULOS_POR_PAGINA = 6;
 
 const getLocalDateString = (date) => {
   const offset = date.getTimezoneOffset();
@@ -33,13 +35,14 @@ export default function VehiculosPage() {
   const [disponibles, setDisponibles] = useState(null);
   const [buscando, setBuscando] = useState(false);
   const [errorBusqueda, setErrorBusqueda] = useState('');
+  const [paginaActual, setPaginaActual] = useState(1);
 
   useEffect(() => {
     let isMounted = true;
     const cargarVehiculos = async () => {
       try {
         const response = await api.get('/vehiculos');
-        if (isMounted) setVehiculos(response.data);
+        if (isMounted) setVehiculos(Array.isArray(response.data) ? response.data : []);
       } catch (err) {
         if (isMounted) setError(err.response?.data?.error || 'Error al cargar los vehículos.');
       } finally {
@@ -71,8 +74,9 @@ export default function VehiculosPage() {
     setBuscando(true);
     try {
       const resultado = await buscarDisponibles(new Date(inicio).toISOString(), new Date(fin).toISOString());
-      setDisponibles(resultado);
+      setDisponibles(Array.isArray(resultado) ? resultado : []);
       setBusqueda({ inicio, fin });
+      setPaginaActual(1);
     } catch (err) {
       setErrorBusqueda(err.response?.data?.error || 'No se pudo buscar disponibilidad.');
     } finally {
@@ -86,9 +90,24 @@ export default function VehiculosPage() {
     setBusqueda(null);
     setDisponibles(null);
     setErrorBusqueda('');
+    setPaginaActual(1);
   };
 
   const lista = disponibles ?? vehiculos;
+  const totalPaginas = Math.max(1, Math.ceil(lista.length / VEHICULOS_POR_PAGINA));
+  const paginaSegura = Math.min(paginaActual, totalPaginas);
+
+  const listaPaginada = useMemo(() => {
+    const inicioIdx = (paginaSegura - 1) * VEHICULOS_POR_PAGINA;
+    return lista.slice(inicioIdx, inicioIdx + VEHICULOS_POR_PAGINA);
+  }, [lista, paginaSegura]);
+
+  const cambiarPagina = (nuevaPagina) => {
+    const clamped = Math.max(1, Math.min(totalPaginas, nuevaPagina));
+    setPaginaActual(clamped);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   const minFecha = getLocalDateString(new Date());
   
   const enlaceReservar = (id) =>
@@ -104,7 +123,6 @@ export default function VehiculosPage() {
   const inputStyle = { borderRight: 'none', borderTopRightRadius: '0', borderBottomRightRadius: '0', minWidth: '130px' };
   const inputTimeStyle = { borderTopLeftRadius: '0', borderBottomLeftRadius: '0', width: '115px', flex: 'none', paddingLeft: '10px', paddingRight: '5px' };
 
-  // 👇 Función para extraer el precio de la lista de tarifas
   const obtenerPrecio = (vehiculo, modalidad) => {
     if (!vehiculo || !vehiculo.tarifas) return null;
     const tarifa = vehiculo.tarifas.find(t => t.modalidad === modalidad);
@@ -177,7 +195,7 @@ export default function VehiculosPage() {
         )}
 
         <div className="row g-4">
-          {lista.map((auto) => (
+          {listaPaginada.map((auto) => (
             <div className="col-md-6 col-lg-4" key={auto.id}>
               <div className="card h-100">
                 <div className="position-relative">
@@ -204,7 +222,6 @@ export default function VehiculosPage() {
                     <span className="text-muted fw-semibold">{auto.anio}</span>
                   </div>
 
-                  {/* 👇 MOSTRAR PRECIOS DESDE TARIFAS */}
                   <div className="d-flex flex-column gap-1 mb-4 mt-2">
                     {obtenerPrecio(auto, 'HORA') && (
                       <span className="fw-semibold" style={{ fontSize: '0.9rem', color: 'var(--rc-text)' }}>
@@ -224,20 +241,60 @@ export default function VehiculosPage() {
                     </button>
                   ) : (
                     <div className="d-flex gap-2 mt-auto"> 
-                     <Link to={`/vehiculos/${auto.id}`} className="btn btn-dark w-100 py-2 mt-auto">
+                      <Link to={`/vehiculos/${auto.id}`} className="btn btn-dark w-100 py-2 mt-auto">
                         Detalles
-                     </Link>
-                    <Link to={enlaceReservar(auto.id)} className="btn btn-dark w-100 py-2 mt-auto">
-                      Reservar
-                    </Link>
+                      </Link>
+                      <Link to={enlaceReservar(auto.id)} className="btn btn-dark w-100 py-2 mt-auto">
+                        Reservar
+                      </Link>
                     </div>
-                    
                   )}
                 </div>
               </div>
             </div>
           ))}
         </div>
+
+        {!loading && totalPaginas > 1 && (
+          <div className="d-flex justify-content-center mt-5">
+            <nav aria-label="Paginación de vehículos">
+              <ul className="pagination pagination-sm mb-0">
+                <li className={`page-item ${paginaSegura === 1 ? 'disabled' : ''}`}>
+                  <button
+                    type="button"
+                    className="page-link"
+                    onClick={() => cambiarPagina(paginaSegura - 1)}
+                  >
+                    Anterior
+                  </button>
+                </li>
+                {Array.from({ length: totalPaginas }, (_, i) => i + 1).map((num) => (
+                  <li
+                    key={num}
+                    className={`page-item ${num === paginaSegura ? 'active' : ''}`}
+                  >
+                    <button
+                      type="button"
+                      className="page-link"
+                      onClick={() => cambiarPagina(num)}
+                    >
+                      {num}
+                    </button>
+                  </li>
+                ))}
+                <li className={`page-item ${paginaSegura === totalPaginas ? 'disabled' : ''}`}>
+                  <button
+                    type="button"
+                    className="page-link"
+                    onClick={() => cambiarPagina(paginaSegura + 1)}
+                  >
+                    Siguiente
+                  </button>
+                </li>
+              </ul>
+            </nav>
+          </div>
+        )}
       </div>
 
       <Footer />
