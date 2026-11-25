@@ -15,48 +15,24 @@ import Footer from '../../components/layout/Footer/Footer';
 
 const ETIQUETA_MODALIDAD = { HORA: 'por hora', DIA: 'por día', SEMANA: 'por semana', MES: 'por mes' };
 
-function extraerCargosAdicionales(reserva) {
+function extraerCargos(reserva) {
   if (!reserva) return [];
   const items = [];
 
-  // Si la API envía un arreglo de cargos (ej. reserva.cargos o reserva.alquiler.cargos)
-  const listaCargos = Array.isArray(reserva.cargos)
-    ? reserva.cargos
-    : Array.isArray(reserva.alquiler?.cargos)
+  const listaCargos = Array.isArray(reserva.alquiler?.cargos)
     ? reserva.alquiler.cargos
+    : Array.isArray(reserva.cargos)
+    ? reserva.cargos
     : [];
 
   for (const c of listaCargos) {
     const monto = Number(c.monto ?? c.total ?? c.valor ?? 0);
-    if (monto > 0) {
-      items.push({
-        concepto: c.concepto || c.tipo || c.motivo || 'Cargo adicional',
-        detalle: c.descripcion || c.observacion || '',
-        monto
-      });
-    }
-  }
-
-  // Campos habituales si vienen planos en reserva o en reserva.alquiler
-  const origen = reserva.alquiler || reserva;
-  const camposConocidos = [
-    { keyMonto: 'cargo_retraso', keyDetalle: 'detalle_retraso', concepto: 'Cargo por retraso en devolución' },
-    { keyMonto: 'monto_retraso', keyDetalle: 'motivo_retraso', concepto: 'Cargo por retraso en devolución' },
-    { keyMonto: 'cargo_combustible', keyDetalle: 'detalle_combustible', concepto: 'Cargo por combustible faltante' },
-    { keyMonto: 'monto_combustible', keyDetalle: 'motivo_combustible', concepto: 'Cargo por combustible faltante' },
-    { keyMonto: 'cargo_danio', keyDetalle: 'detalle_danio', concepto: 'Cargo por daño al vehículo' },
-    { keyMonto: 'cargo_dano', keyDetalle: 'detalle_dano', concepto: 'Cargo por daño al vehículo' },
-    { keyMonto: 'monto_danio', keyDetalle: 'motivo_danio', concepto: 'Cargo por daño al vehículo' },
-    { keyMonto: 'cargos_adicionales', keyDetalle: 'motivo_cargos', concepto: 'Cargos adicionales' }
-  ];
-
-  for (const campo of camposConocidos) {
-    const val = origen[campo.keyMonto] ?? reserva[campo.keyMonto];
-    const monto = Number(val);
     if (Number.isFinite(monto) && monto > 0) {
+      const prefijoTipo = c.tipo ? `[${c.tipo}] ` : '';
+      const textoBase = c.descripcion || c.concepto || c.motivo || 'Cargo adicional';
       items.push({
-        concepto: campo.concepto,
-        detalle: origen[campo.keyDetalle] || reserva[campo.keyDetalle] || '',
+        concepto: `${prefijoTipo}${textoBase}`.trim(),
+        detalle: c.observacion || c.detalle || '',
         monto
       });
     }
@@ -121,7 +97,7 @@ export default function DetalleReservaPage() {
   const desglose = useMemo(() => {
     if (!reserva) return null;
 
-    const totalFinal = Number(reserva.total || 0);
+    const alquiler = reserva.alquiler || null;
     const calculoBase = calcularTotal({
       fechaInicio: reserva.fecha_inicio,
       fechaFin: reserva.fecha_fin,
@@ -129,29 +105,49 @@ export default function DetalleReservaPage() {
       precioUnitario: reserva.precio_unitario
     });
 
-    const cargosExplicitos = extraerCargosAdicionales(reserva);
-    const sumaCargosExplicitos = cargosExplicitos.reduce((acc, c) => acc + c.monto, 0);
+    const cargosLista = extraerCargos(reserva);
+    const sumaCargos = cargosLista.reduce((acc, c) => acc + c.monto, 0);
 
-    const subtotalBase = calculoBase ? calculoBase.total : Math.max(0, totalFinal - sumaCargosExplicitos);
-    const diferenciaNoDetallada = Number((totalFinal - subtotalBase - sumaCargosExplicitos).toFixed(2));
+    const subtotalBase = calculoBase
+      ? calculoBase.total
+      : alquiler?.monto_total != null
+      ? Math.max(0, Number(alquiler.monto_total) - sumaCargos)
+      : Number(reserva.total || 0);
 
-    const cargosFinales = [...cargosExplicitos];
-    if (diferenciaNoDetallada > 0.009) {
+    const diferenciaSinDetalle =
+      alquiler?.monto_total != null
+        ? Number((Number(alquiler.monto_total) - subtotalBase - sumaCargos).toFixed(2))
+        : 0;
+
+    const cargosFinales = [...cargosLista];
+    if (diferenciaSinDetalle > 0.009) {
       cargosFinales.push({
-        concepto: 'Cargos adicionales (retraso, combustible o daños)',
-        detalle: 'Aplicados al cierre o gestión de la reserva',
-        monto: diferenciaNoDetallada
+        concepto: 'Otros cargos adicionales del alquiler',
+        detalle: '',
+        monto: diferenciaSinDetalle
       });
     }
 
     const totalCargos = cargosFinales.reduce((acc, c) => acc + c.monto, 0);
+    const totalFinal =
+      alquiler?.monto_total != null && Number(alquiler.monto_total) > 0
+        ? Number(alquiler.monto_total)
+        : Number(reserva.total || subtotalBase + totalCargos);
+
+    const pagosLista = Array.isArray(alquiler?.pagos) ? alquiler.pagos : [];
+    const totalPagado = pagosLista.reduce((acc, p) => acc + Number(p.monto ?? p.total ?? 0), 0);
+    const deposito = alquiler?.deposito_garantia != null ? Number(alquiler.deposito_garantia) : null;
 
     return {
+      alquiler,
       calculoBase,
       subtotalBase,
       cargosFinales,
       totalCargos,
-      totalFinal
+      totalFinal,
+      pagosLista,
+      totalPagado,
+      deposito
     };
   }, [reserva]);
 
@@ -229,7 +225,6 @@ export default function DetalleReservaPage() {
 
               <hr className="my-4" style={{ borderColor: 'var(--rc-border)' }} />
 
-              {/* Detalle de cobro / comprobante */}
               <h6
                 className="fw-bold text-muted text-uppercase mb-3"
                 style={{ fontSize: '0.75rem', letterSpacing: '0.05em' }}
@@ -237,7 +232,7 @@ export default function DetalleReservaPage() {
                 Detalle del cobro
               </h6>
 
-              <div className="d-flex justify-content-between align-items-center mb-2">
+              <div className="d-flex justify-content-between align-items-center gap-3 mb-2">
                 <div>
                   <span style={{ color: 'var(--rc-text)' }}>Alquiler base</span>
                   {desglose.calculoBase && (
@@ -254,17 +249,20 @@ export default function DetalleReservaPage() {
                     </small>
                   )}
                 </div>
-                <span className="fw-semibold" style={{ color: 'var(--rc-text)' }}>
+                <span className="fw-semibold text-nowrap" style={{ color: 'var(--rc-text)' }}>
                   {formatearBs(desglose.subtotalBase)}
                 </span>
               </div>
 
               {desglose.cargosFinales.length > 0 ? (
                 <div className="my-3">
+                  <div className="text-muted mb-2" style={{ fontSize: '0.85rem' }}>
+                    Cargos adicionales
+                  </div>
                   {desglose.cargosFinales.map((cargo, idx) => (
                     <div
                       key={`${cargo.concepto}-${idx}`}
-                      className="d-flex justify-content-between align-items-start py-2 px-3 rounded-3 mb-2"
+                      className="d-flex justify-content-between align-items-start gap-3 py-2 px-3 rounded-3 mb-2"
                       style={{ backgroundColor: 'var(--rc-bg-alt)' }}
                     >
                       <div>
@@ -275,25 +273,68 @@ export default function DetalleReservaPage() {
                           <small className="text-muted d-block">{cargo.detalle}</small>
                         )}
                       </div>
-                      <span className="fw-bold text-danger ms-3">
+                      <span className="fw-bold text-danger text-nowrap">
                         +{formatearBs(cargo.monto)}
                       </span>
                     </div>
                   ))}
                 </div>
               ) : (
-                <div className="d-flex justify-content-between align-items-center mb-3">
+                <div className="d-flex justify-content-between align-items-center gap-3 mb-3">
                   <span className="text-muted">Cargos adicionales (retraso, combustible, daños)</span>
-                  <span className="text-muted">{formatearBs(0)}</span>
+                  <span className="text-muted text-nowrap">{formatearBs(0)}</span>
+                </div>
+              )}
+
+              {desglose.pagosLista.length > 0 && (
+                <div className="my-3">
+                  <div className="text-muted mb-2" style={{ fontSize: '0.85rem' }}>
+                    Pagos registrados
+                  </div>
+                  {desglose.pagosLista.map((pago, idx) => (
+                    <div
+                      key={pago.id ?? idx}
+                      className="d-flex justify-content-between align-items-center gap-3 py-2 px-3 rounded-3 mb-2"
+                      style={{ backgroundColor: 'var(--rc-bg-alt)' }}
+                    >
+                      <div className="d-flex flex-wrap align-items-center gap-2">
+                        {pago.tipo && (
+                          <span className="badge bg-secondary">{pago.tipo}</span>
+                        )}
+                        <span className="fw-semibold" style={{ color: 'var(--rc-text)', fontSize: '0.9rem' }}>
+                          {pago.metodo || 'PAGO'}
+                        </span>
+                        {(pago.fecha || pago.createdAt) && (
+                          <small className="text-muted">
+                            ({formatearFecha(pago.fecha || pago.createdAt)})
+                          </small>
+                        )}
+                      </div>
+                      <span className="fw-bold text-success text-nowrap">
+                        {formatearBs(pago.monto ?? pago.total ?? 0)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {desglose.deposito !== null && (
+                <div className="mb-3 pt-1">
+                  <small className="text-muted d-block">Depósito garantía</small>
+                  <span className="fw-semibold text-nowrap" style={{ color: 'var(--rc-text)' }}>
+                    {formatearBs(desglose.deposito)}
+                  </span>
                 </div>
               )}
 
               <div
-                className="d-flex justify-content-between align-items-center pt-3 border-top"
+                className="d-flex justify-content-between align-items-center gap-3 pt-3 border-top"
                 style={{ borderColor: 'var(--rc-border)' }}
               >
                 <span className="fw-bold fs-6" style={{ color: 'var(--rc-text)' }}>Total</span>
-                <span className="fs-4 fw-bold text-warning">{formatearBs(desglose.totalFinal)}</span>
+                <span className="fs-4 fw-bold text-warning text-nowrap">
+                  {formatearBs(desglose.totalFinal)}
+                </span>
               </div>
             </div>
 

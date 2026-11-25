@@ -1,9 +1,6 @@
 import { useAuth } from '../../context/useAuth';
 import { Link } from 'react-router-dom';
 import Navbar from '../../components/layout/Navbar/Navbar';
-import user from '../../assets/images/user.jfif';
-import reserva from '../../assets/images/reserva.jfif';
-import vehiculo from '../../assets/images/vehi.jpg';
 
 export default function DashboardPage() {
   const { usuario } = useAuth();
@@ -16,7 +13,9 @@ export default function DashboardPage() {
       <Navbar />
       <div className="container py-5 dashboard-container" style={{ marginTop: '80px' }}>
         <div className="mb-5">
-          <h1 className="fw-bold mb-1 dashboard-title" style={{ color: 'var(--rc-text)' }}>Dashboard</h1>
+          <h1 className="fw-bold mb-1 dashboard-title" style={{ color: 'var(--rc-text)' }}>
+            Dashboard
+          </h1>
           <p className="text-muted">
             Bienvenido, {usuario.nombre}. Aquí tienes un resumen de tu sistema.
           </p>
@@ -27,12 +26,9 @@ export default function DashboardPage() {
           {esAdmin && (
             <div className="col-md-4">
               <div className="card p-4 dashboard-card">
-                <div className="d-flex justify-content-between align-items-center mb-3">
-                  <div className="rounded-circle d-flex align-items-center justify-content-center dashboard-icon dashboard-icon--info">
-                    <img src={vehiculo} alt="vehiculos" />
-                  </div>
-                </div>
-                <h4 className="fw-bold mb-1 dashboard-card-title" style={{ color: 'var(--rc-text)' }}>Inventario</h4>
+                <h4 className="fw-bold mb-2 dashboard-card-title" style={{ color: 'var(--rc-text)' }}>
+                  Inventario
+                </h4>
                 <p className="mb-4 dashboard-card-text">
                   Gestiona los vehículos, añade autos nuevos y controla sus estados.
                 </p>
@@ -46,12 +42,9 @@ export default function DashboardPage() {
           {/* Card: Reservas */}
           <div className="col-md-4">
             <div className="card p-4 dashboard-card">
-              <div className="d-flex justify-content-between align-items-center mb-3">
-                <div className="rounded-circle d-flex align-items-center justify-content-center dashboard-icon dashboard-icon--success">
-                  <img src={reserva} alt="reservas" />
-                </div>
-              </div>
-              <h4 className="fw-bold mb-1 dashboard-card-title" style={{ color: 'var(--rc-text)' }}>Reservas</h4>
+              <h4 className="fw-bold mb-2 dashboard-card-title" style={{ color: 'var(--rc-text)' }}>
+                Reservas
+              </h4>
               <p className="mb-4 dashboard-card-text">
                 Revisa las reservas de los clientes y gestiona las entregas.
               </p>
@@ -64,15 +57,7 @@ export default function DashboardPage() {
           {/* Card: Alquileres pendientes */}
           <div className="col-md-4">
             <div className="card p-4 dashboard-card">
-              <div className="d-flex justify-content-between align-items-center mb-3">
-                <div
-                  className="rounded-circle d-flex align-items-center justify-content-center dashboard-icon dashboard-icon--warning"
-                  style={{ backgroundColor: 'rgba(255, 193, 7, 0.1)', width: '50px', height: '50px', fontSize: '24px' }}
-                >
-                  🚗
-                </div>
-              </div>
-              <h4 className="fw-bold mb-1 dashboard-card-title" style={{ color: 'var(--rc-text)' }}>
+              <h4 className="fw-bold mb-2 dashboard-card-title" style={{ color: 'var(--rc-text)' }}>
                 Alquileres pendientes
               </h4>
               <p className="mb-4 dashboard-card-text">
@@ -87,15 +72,7 @@ export default function DashboardPage() {
           {/* Card: Alquileres activos */}
           <div className="col-md-4">
             <div className="card p-4 dashboard-card">
-              <div className="d-flex justify-content-between align-items-center mb-3">
-                <div
-                  className="rounded-circle d-flex align-items-center justify-content-center dashboard-icon dashboard-icon--success"
-                  style={{ backgroundColor: 'rgba(25, 135, 84, 0.12)', width: '50px', height: '50px', fontSize: '24px' }}
-                >
-                  🔑
-                </div>
-              </div>
-              <h4 className="fw-bold mb-1 dashboard-card-title" style={{ color: 'var(--rc-text)' }}>
+              <h4 className="fw-bold mb-2 dashboard-card-title" style={{ color: 'var(--rc-text)' }}>
                 Alquileres activos
               </h4>
               <p className="mb-4 dashboard-card-text">
@@ -110,15 +87,7 @@ export default function DashboardPage() {
           {/* Card: Historial de alquileres */}
           <div className="col-md-4">
             <div className="card p-4 dashboard-card">
-              <div className="d-flex justify-content-between align-items-center mb-3">
-                <div
-                  className="rounded-circle d-flex align-items-center justify-content-center dashboard-icon dashboard-icon--info"
-                  style={{ backgroundColor: 'rgba(13, 110, 253, 0.12)', width: '50px', height: '50px', fontSize: '24px' }}
-                >
-                  📜
-                </div>
-              </div>
-              <h4 className="fw-bold mb-1 dashboard-card-title" style={{ color: 'var(--rc-text)' }}>
+              <h4 className="fw-bold mb-2 dashboard-card-title" style={{ color: 'var(--rc-text)' }}>
                 Historial de alquileres
               </h4>
               <p className="mb-4 dashboard-card-text">
@@ -134,12 +103,9 @@ export default function DashboardPage() {
           {esAdmin && (
             <div className="col-md-4">
               <div className="card p-4 dashboard-card">
-                <div className="d-flex justify-content-between align-items-center mb-3">
-                  <div className="rounded-circle d-flex align-items-center justify-content-center dashboard-icon dashboard-icon--warning" style={{ backgroundColor: 'rgba(255, 193, 7, 0.1)', width: '50px', height: '50px', fontSize: '24px' }}>
-                    💰
-                  </div>
-                </div>
-                <h4 className="fw-bold mb-1 dashboard-card-title" style={{ color: 'var(--rc-text)' }}>Tarifas</h4>
+                <h4 className="fw-bold mb-2 dashboard-card-title" style={{ color: 'var(--rc-text)' }}>
+                  Tarifas
+                </h4>
                 <p className="mb-4 dashboard-card-text">
                   Configura precios por categoría o vehículo específico.
                 </p>
@@ -150,22 +116,36 @@ export default function DashboardPage() {
             </div>
           )}
 
+          {/* Card: Categorías (solo ADMINISTRADOR) */}
+          {esAdmin && (
+            <div className="col-md-4">
+              <div className="card p-4 dashboard-card">
+                <h4 className="fw-bold mb-2 dashboard-card-title" style={{ color: 'var(--rc-text)' }}>
+                  Categorías
+                </h4>
+                <p className="mb-4 dashboard-card-text">
+                  Crea y organiza las categorías de vehículos disponibles para el catálogo.
+                </p>
+                <Link to="/dashboard/admin/categorias" className="btn btn-dark w-100 mt-auto">
+                  Gestionar Categorías
+                </Link>
+              </div>
+            </div>
+          )}
+
           {/* Card: Usuarios (solo ADMINISTRADOR) */}
           {esAdmin && (
             <div className="col-md-4">
               <div className="card p-4 dashboard-card">
-                <div className="d-flex justify-content-between align-items-center mb-3">
-                  <div className="rounded-circle d-flex align-items-center justify-content-center dashboard-icon dashboard-icon--info">
-                    <img src={user} alt="usuarios" />
-                  </div>
-                </div>
-                <h4 className="fw-bold mb-1 dashboard-card-title" style={{ color: 'var(--rc-text)' }}>Usuarios</h4>
+                <h4 className="fw-bold mb-2 dashboard-card-title" style={{ color: 'var(--rc-text)' }}>
+                  Usuarios
+                </h4>
                 <p className="mb-4 dashboard-card-text">
-                  Administra a los clientes, empleados y configuraciones del sistema.
+                  Administra a los clientes, empleados y roles del sistema.
                 </p>
-                <button className="btn btn-outline-secondary w-100 mt-auto" disabled>
-                  Próximamente
-                </button>
+                <Link to="/admin/usuarios" className="btn btn-dark w-100 mt-auto">
+                  Gestionar Usuarios
+                </Link>
               </div>
             </div>
           )}

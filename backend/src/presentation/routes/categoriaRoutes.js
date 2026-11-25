@@ -1,10 +1,11 @@
 import { Router } from 'express';
-import { getCategorias } from '../controllers/CategoriaController.js';
+import { getCategorias, postCategoria } from '../controllers/CategoriaController.js';
 import { verifyToken } from '../middlewares/authMiddleware.js';
+import { authorizeRole } from '../middlewares/roleMiddleware.js';
 
 const router = Router();
 
-// Ruta para obtener todas las categorías (requiere estar logueado)
 router.get('/', verifyToken, getCategorias);
+router.post('/', verifyToken, authorizeRole(['ADMINISTRADOR']), postCategoria);
 
 export default router;

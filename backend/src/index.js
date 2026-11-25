@@ -12,6 +12,7 @@ import tarifaRoutes from './presentation/routes/tarifaRoutes.js';
 import alquilerRoutes from './presentation/routes/alquilerRoutes.js';
 import errorHandler from './presentation/middlewares/errorHandler.js';
 import pagoRoutes from './presentation/routes/pagoRoutes.js';
+import usuarioRoutes from './presentation/routes/usuarioRoutes.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -34,6 +35,7 @@ app.use('/api/categorias', categoriaRoutes);
 app.use('/api/tarifas', tarifaRoutes);
 app.use('/api/alquileres', alquilerRoutes);
 app.use('/api/alquileres', pagoRoutes);
+app.use('/api/usuarios', usuarioRoutes);
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'Rent a Car API funcionando' });

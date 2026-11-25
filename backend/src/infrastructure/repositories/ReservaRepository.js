@@ -1,10 +1,26 @@
 import { Op } from 'sequelize';
-import { sequelize, ReservaModel, VehiculoModel, UsuarioModel } from '../models/index.js';
+import {
+  sequelize,
+  ReservaModel,
+  VehiculoModel,
+  UsuarioModel,
+  AlquilerModel,
+  CargoAdicionalModel,
+  PagoModel
+} from '../models/index.js';
 import { ESTADOS_BLOQUEANTES } from '../../domain/reservas/Reserva.js';
 
 const incluir = [
   { model: VehiculoModel, as: 'vehiculo', attributes: ['id', 'placa', 'marca', 'modelo', 'anio', 'imagen_url'] },
-  { model: UsuarioModel, as: 'usuario', attributes: ['id', 'nombre', 'email'] }
+  { model: UsuarioModel, as: 'usuario', attributes: ['id', 'nombre', 'email'] },
+  {
+    model: AlquilerModel,
+    as: 'alquiler',
+    include: [
+      { model: CargoAdicionalModel, as: 'cargos' },
+      { model: PagoModel, as: 'pagos' }
+    ]
+  }
 ];
 
 function condicionSolapamiento(inicio, fin) {
